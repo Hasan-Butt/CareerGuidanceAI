@@ -1,0 +1,28 @@
+{
+  "unique_raw_majors": 11816,
+  "imbalance_ratio_max_min": 14.1,
+  "top_correlations": {
+    "age ~ education": 0.51,
+    "enterprising ~ conventional": 0.5,
+    "realistic ~ conventional": 0.48,
+    "vocab_score ~ age": 0.41,
+    "social ~ enterprising": 0.36,
+    "realistic ~ differentiation": -0.36
+  },
+  "strongest_scale_per_house": {
+    "Arts, Humanities & Social Sciences": "social",
+    "Business & Commerce": "enterprising",
+    "Medicine & Health": "investigative",
+    "Pure Sciences": "investigative",
+    "Engineering": "realistic",
+    "Computer Science & IT": "realistic",
+    "Law": "enterprising"
+  },
+  "female_share_overall": 0.673,
+  "us_share": 0.534,
+  "pk_unemployment_EDU_AGGREGATE_ADV_2025": 11.1,
+  "pk_unemployment_EDU_AGGREGATE_INT_2025": 9.9,
+  "pk_unemployment_EDU_AGGREGATE_BAS_2025": 6.3,
+  "pk_unemployment_EDU_AGGREGATE_TOTAL_2025": 7.0,
+  "rozee_bachelor_share_of_known": 0.722
+}
