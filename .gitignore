@@ -1,0 +1,32 @@
+# data never goes to GitHub (raw is ~200 MB; Rozee.pk postings are scraped content)
+data/
+*.csv
+!docs/*.csv
+*.jsonl
+*.zip
+*.joblib
+
+# survey responses contain personal answers
+survey/*responses*
+survey/*.csv
+
+# python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# latex build files (keep main.tex, figures and the final PDF)
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.synctex.gz
+report/*.fls
+report/*.fdb_latexmk
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
