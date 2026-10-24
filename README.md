@@ -96,7 +96,7 @@ pip install -r requirements.txt
 Raw data (~200 MB) is **not** in this repository. Either:
 
 - **Download** the `PakCareer_Data` folder from Google Drive:
-  <https://drive.google.com/drive/folders/1GI0pb6IfsBpBOtEVK4Soi82DH2AogIm9> and put its
+  <https://drive.google.com/drive/folders/1wk0N7zRLVq2g-ZGwCaSXhBhAJ8mxHcxa> and put its
   contents (`raw/`, `processed/`) in `data/`, **or**
 - **Re-collect** everything yourself (about 35 minutes, mostly the Rozee.pk scrape):
   ```bash
