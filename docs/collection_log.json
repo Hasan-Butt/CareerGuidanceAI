@@ -1,0 +1,317 @@
+[
+  {
+    "source": "riasec",
+    "url": "http://openpsychometrics.org/_rawdata/RIASEC_data12Dec2018.zip",
+    "file": "riasec/codebook.txt",
+    "rows": null,
+    "bytes": 6088,
+    "fetched_at": "2026-10-18T16:36:09+00:00",
+    "note": ""
+  },
+  {
+    "source": "riasec",
+    "url": "http://openpsychometrics.org/_rawdata/RIASEC_data12Dec2018.zip",
+    "file": "riasec/data.csv",
+    "rows": 145828,
+    "bytes": 29324901,
+    "fetched_at": "2026-10-18T16:36:10+00:00",
+    "note": "tab-separated"
+  },
+  {
+    "source": "ilo",
+    "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EAR_EMTA_SEX_OCU_CUR_NB,1.0/PAK.....?startPeriod=2000",
+    "file": "pakistan/ilo/DF_EAR_EMTA_SEX_OCU_CUR_NB.csv",
+    "rows": 2268,
+    "bytes": 886680,
+    "fetched_at": "2026-10-18T16:37:03+00:00",
+    "note": "avg monthly earnings by occupation (PKR + PPP$)"
+  },
+  {
+    "source": "ilo",
+    "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EAR_EMTA_SEX_ECO_CUR_NB,1.0/PAK.....?startPeriod=2000",
+    "file": "pakistan/ilo/DF_EAR_EMTA_SEX_ECO_CUR_NB.csv",
+    "rows": 4140,
+    "bytes": 1666923,
+    "fetched_at": "2026-10-18T16:37:16+00:00",
+    "note": "avg monthly earnings by economic activity"
+  },
+  {
+    "source": "ilo",
+    "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EAR_EMTA_SEX_EDU_CUR_NB,1.0/PAK.....?startPeriod=2000",
+    "file": "pakistan/ilo/DF_EAR_EMTA_SEX_EDU_CUR_NB.csv",
+    "rows": 2178,
+    "bytes": 824786,
+    "fetched_at": "2026-10-18T16:37:24+00:00",
+    "note": "avg monthly earnings by education level"
+  },
+  {
+    "source": "ilo",
+    "url": "https://sdmx.ilo.org/rest/data/ILO,DF_UNE_DEAP_SEX_EDU_RT,1.0/PAK....?startPeriod=2000",
+    "file": "pakistan/ilo/DF_UNE_DEAP_SEX_EDU_RT.csv",
+    "rows": 1844,
+    "bytes": 717728,
+    "fetched_at": "2026-10-18T16:37:29+00:00",
+    "note": "unemployment rate by education level"
+  },
+  {
+    "source": "ilo",
+    "url": "https://sdmx.ilo.org/rest/data/ILO,DF_UNE_TUNE_SEX_EDU_NB,1.0/PAK....?startPeriod=2000",
+    "file": "pakistan/ilo/DF_UNE_TUNE_SEX_EDU_NB.csv",
+    "rows": 1844,
+    "bytes": 716826,
+    "fetched_at": "2026-10-18T16:37:34+00:00",
+    "note": "unemployed persons by education level (thousands)"
+  },
+  {
+    "source": "ilo",
+    "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_OCU_NB,1.0/PAK....?startPeriod=2000",
+    "file": "pakistan/ilo/DF_EMP_TEMP_SEX_OCU_NB.csv",
+    "rows": 2205,
+    "bytes": 860340,
+    "fetched_at": "2026-10-18T16:37:40+00:00",
+    "note": "employment by occupation (thousands)"
+  },
+  {
+    "source": "ilo",
+    "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_ECO_NB,1.0/PAK....?startPeriod=2000",
+    "file": "pakistan/ilo/DF_EMP_TEMP_SEX_ECO_NB.csv",
+    "rows": 4416,
+    "bytes": 1786320,
+    "fetched_at": "2026-10-18T16:37:51+00:00",
+    "note": "employment by economic activity (thousands)"
+  },
+  {
+    "source": "ilo",
+    "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_EDU_NB,1.0/PAK....?startPeriod=2000",
+    "file": "pakistan/ilo/DF_EMP_TEMP_SEX_EDU_NB.csv",
+    "rows": 2001,
+    "bytes": 760676,
+    "fetched_at": "2026-10-18T16:37:58+00:00",
+    "note": "employment by education level (thousands)"
+  },
+  {
+    "source": "ilo",
+    "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_OCU_EDU_NB,1.0/PAK.....?startPeriod=2000",
+    "file": "pakistan/ilo/DF_EMP_TEMP_SEX_OCU_EDU_NB.csv",
+    "rows": 16058,
+    "bytes": 6461841,
+    "fetched_at": "2026-10-18T16:38:12+00:00",
+    "note": "employment by occupation x education (thousands)"
+  },
+  {
+    "source": "worldbank",
+    "url": "https://api.worldbank.org/v2/country/PAK/indicator/*",
+    "file": "pakistan/worldbank/pakistan_indicators.csv",
+    "rows": 576,
+    "bytes": 38767,
+    "fetched_at": "2026-10-18T16:38:33+00:00",
+    "note": "16 indicators, long format"
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/occupation_data.csv",
+    "rows": 1016,
+    "bytes": 268030,
+    "fetched_at": "2026-10-18T16:40:26+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/career_interest_types.csv",
+    "rows": 8307,
+    "bytes": 1136078,
+    "fetched_at": "2026-10-18T16:40:26+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/career_interest_type_keywords.csv",
+    "rows": 75,
+    "bytes": 2706,
+    "fetched_at": "2026-10-18T16:40:26+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/interests_illustrative_activities.csv",
+    "rows": 188,
+    "bytes": 14931,
+    "fetched_at": "2026-10-18T16:40:26+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/interests_illustrative_occupations.csv",
+    "rows": 186,
+    "bytes": 15034,
+    "fetched_at": "2026-10-18T16:40:26+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/specific_interest_areas.csv",
+    "rows": 73062,
+    "bytes": 8712834,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/specific_interest_areas_to_career_interest_types.csv",
+    "rows": 53,
+    "bytes": 2489,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/job_zones.csv",
+    "rows": 923,
+    "bytes": 59908,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/job_zone_reference.csv",
+    "rows": 4,
+    "bytes": 3688,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/education.csv",
+    "rows": 11495,
+    "bytes": 1985398,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/education_categories.csv",
+    "rows": 24,
+    "bytes": 3186,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/training_and_experience.csv",
+    "rows": 26812,
+    "bytes": 4505025,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/transferable_skills.csv",
+    "rows": 45500,
+    "bytes": 6081245,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/essential_skills.csv",
+    "rows": 18200,
+    "bytes": 2328135,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/abilities.csv",
+    "rows": 94640,
+    "bytes": 12667583,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/knowledge.csv",
+    "rows": 60060,
+    "bytes": 8013560,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/work_styles.csv",
+    "rows": 37422,
+    "bytes": 4329846,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/job_titles.csv",
+    "rows": 54269,
+    "bytes": 4504432,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/related_occupations.csv",
+    "rows": 18460,
+    "bytes": 2051148,
+    "fetched_at": "2026-10-18T16:40:27+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/content_model_reference.csv",
+    "rows": 3006,
+    "bytes": 235856,
+    "fetched_at": "2026-10-18T16:40:28+00:00",
+    "note": ""
+  },
+  {
+    "source": "onet",
+    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_csv.zip",
+    "file": "onet/scales_reference.csv",
+    "rows": 33,
+    "bytes": 1006,
+    "fetched_at": "2026-10-18T16:40:28+00:00",
+    "note": ""
+  },
+  {
+    "source": "rozee",
+    "url": "https://www.rozee.pk/job/jsearch/q/all/fpn/<offset>",
+    "file": "pakistan/rozee/rozee_jobs_raw.jsonl",
+    "rows": 10999,
+    "bytes": 73246263,
+    "fetched_at": "2026-10-18T17:09:06+00:00",
+    "note": "full raw JSON per job, 550 pages, site reported 10999 jobs"
+  },
+  {
+    "source": "rozee",
+    "url": "derived from rozee_jobs_raw.jsonl",
+    "file": "pakistan/rozee/rozee_jobs.csv",
+    "rows": 10999,
+    "bytes": 38627248,
+    "fetched_at": "2026-10-18T17:09:11+00:00",
+    "note": "flattened columns"
+  }
+]
