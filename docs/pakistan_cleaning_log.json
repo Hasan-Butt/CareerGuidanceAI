@@ -1,0 +1,43 @@
+{
+  "ilo": {
+    "rows_raw": 36954,
+    "rows_clean": 31969,
+    "dropped_missing_or_duplicate": 4985
+  },
+  "sector_earnings_year": 2025,
+  "worldbank": {
+    "rows_raw": 576,
+    "rows_non_null": 472,
+    "years": [
+      1990,
+      2025
+    ]
+  },
+  "rozee": {
+    "rows_raw": 10999,
+    "dropped_duplicate_title_company_city": 1405,
+    "experience_outliers_set_nan": 0,
+    "rows_clean": 9580,
+    "house_mapped": 7469,
+    "degree_level_found": 7589,
+    "jobs_per_house": {
+      "Business & Commerce": 4559,
+      "Computer Science & IT": 854,
+      "Arts, Humanities & Social Sciences": 814,
+      "Engineering": 686,
+      "Medicine & Health": 449,
+      "Pure Sciences": 77,
+      "Law": 30
+    },
+    "top_cities": {
+      "Lahore": 2875,
+      "Karachi": 2297,
+      "Islamabad": 1288,
+      "Multiple cities": 1016,
+      "Rawalpindi": 495,
+      "Hyderabad": 331,
+      "Faisalabad": 197,
+      "Multan": 127
+    }
+  }
+}
