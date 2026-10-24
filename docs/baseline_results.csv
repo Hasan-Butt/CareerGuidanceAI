@@ -1,0 +1,5 @@
+model,top1,top2,top3,macro_f1
+Always guess the largest house,0.464,,,
+Logistic regression (balanced),0.368,0.551,0.714,0.3
+"Gradient boosting, 30 features",0.53,0.73,0.834,0.28
+"Gradient boosting, 30 features + 58 items",0.566,0.762,0.86,0.349

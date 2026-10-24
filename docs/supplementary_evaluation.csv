@@ -1,0 +1,11 @@
+dataset,rows,labelled_rows,classes,random_guess,majority,cv_accuracy,verdict
+roo_data.csv,20000,20000,34.0,0.029,0.061,0.04,
+dataSet.csv,20000,20000,7.0,0.143,0.288,0.236,
+Career-prediction-data.csv,6901,6901,12.0,0.083,0.091,0.084,
+career_path_in_all_field.csv,9000,9000,90.0,0.011,0.015,0.009,
+career_dataset_large.xlsx,5000,5000,12.0,0.083,0.086,0.081,
+output.csv,1000,1000,10.0,0.1,0.111,0.099,
+Course_Job_Recommendation_Dataset.csv,21273,21273,45.0,0.022,0.09,1.0,
+career_compute_dataset.csv,7525,49,,,,,too few labels
+cs_students.csv,180,180,33.0,0.03,0.106,0.783,
+AI-based Career Recommendation System.csv,200,200,32.0,0.031,0.105,0.254,
