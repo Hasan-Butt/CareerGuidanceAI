@@ -1,0 +1,61 @@
+{
+  "n_train": 65004,
+  "n_test": 16252,
+  "features": [
+    "realistic",
+    "investigative",
+    "artistic",
+    "social",
+    "enterprising",
+    "conventional",
+    "extraversion",
+    "agreeableness",
+    "conscientiousness",
+    "emotional_stability",
+    "openness",
+    "vocab_score",
+    "differentiation",
+    "familysize",
+    "age",
+    "education",
+    "urban_rural",
+    "urban_suburban",
+    "urban_unknown",
+    "urban_urban",
+    "engnat_native",
+    "engnat_non_native",
+    "engnat_unknown",
+    "holland_code_A",
+    "holland_code_C",
+    "holland_code_E",
+    "holland_code_I",
+    "holland_code_R",
+    "holland_code_S",
+    "fake_word_flag"
+  ],
+  "classes": [
+    "Arts, Humanities & Social Sciences",
+    "Business & Commerce",
+    "Computer Science & IT",
+    "Engineering",
+    "Law",
+    "Medicine & Health",
+    "Pure Sciences"
+  ],
+  "class_weights": {
+    "Arts, Humanities & Social Sciences": 0.308,
+    "Business & Commerce": 0.769,
+    "Computer Science & IT": 3.447,
+    "Engineering": 1.638,
+    "Law": 4.348,
+    "Medicine & Health": 1.478,
+    "Pure Sciences": 1.545
+  },
+  "not_used_as_features": [
+    "gender",
+    "religion",
+    "race",
+    "orientation",
+    "country"
+  ]
+}
