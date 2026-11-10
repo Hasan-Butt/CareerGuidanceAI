@@ -6,8 +6,8 @@
 
 \subsection{Framework Selection}
 
-We implement the classifier using \textbf{XGBoost} (v2.x) and
-\textbf{scikit-learn} (v1.5), both industry-standard frameworks for
+We implement the classifier using \textbf{XGBoost} (v3) and
+\textbf{scikit-learn} (v1.9), both industry-standard frameworks for
 supervised learning on tabular data. A neural-network approach (PyTorch
 MLP) was considered but rejected: our feature set is fully engineered and
 structured, the dataset has no spatial or sequential structure, and
@@ -15,7 +15,7 @@ gradient-boosted trees are empirically superior on tabular classification
 tasks of this scale~\cite{grinsztajn2022tree}. XGBoost was preferred over
 sklearn's \texttt{GradientBoostingClassifier} because its histogram-based
 split finding reduces training time by an order of magnitude on 65\,000
-rows.
+rows (the final model trains in under a minute).
 
 \subsection{Architecture Definition}
 
@@ -37,14 +37,30 @@ with $K=7$ houses the loss is the \textbf{softmax cross-entropy}
 \]
 
 and predictions are the $\operatorname{argmax}$ of the $K$ output
-probability vectors. Class imbalance (14:1 ratio, Arts vs.\ Law) is
-addressed through XGBoost's per-sample weighting computed via
-\texttt{compute\_sample\_weight('balanced')}, which up-weights the
-minority classes proportionally to their inverse frequency.
+probability vectors. Figure~\ref{fig:arch} shows the end-to-end pipeline.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.95\linewidth]{figures/architecture.png}
+  \caption{End-to-end pipeline: a student's answers are preprocessed by the
+           fitted scikit-learn \texttt{ColumnTransformer}, fed into the
+           XGBoost ensemble, and the softmax probabilities are ranked to
+           produce the top-3 house recommendations.}
+  \label{fig:arch}
+\end{figure}
+
+\paragraph{Class imbalance.} The classes are imbalanced 14:1 (Arts vs.\ Law).
+We trained two variants: an \emph{unweighted} model and a \emph{class-balanced}
+model whose samples are weighted with
+\texttt{compute\_sample\_weight('balanced')}. Balancing raises macro-F1 and
+minority-class recall but lowers top-$k$ accuracy (Table~\ref{tab:results}).
+Because the application presents a ranked top-3 list, we select the
+\textbf{unweighted} model as the final model and report the balanced variant
+as a comparison.
 
 \subsection{Feature Set}
 
-The model is trained on \textbf{89 features} derived from two groups:
+The model is trained on \textbf{88 features} derived from two groups:
 
 \begin{itemize}
   \item \textbf{30 engineered features}: six RIASEC domain scores,
@@ -52,15 +68,18 @@ The model is trained on \textbf{89 features} derived from two groups:
     differentiation, Holland code one-hot encoding, and demographic
     variables (age, education, family size, urban/rural, English
     nativeness).
-  \item \textbf{59 raw item responses}: 48 RIASEC Likert-scale answers
+  \item \textbf{58 raw item responses}: 48 RIASEC Likert-scale answers
     (R1--C8) and 10 TIPI personality items (TIPI1--TIPI10), retained
     because they provide the per-item signal that domain averages
     suppress.
 \end{itemize}
 
 Sensitive attributes (gender, religion, race, sexual orientation,
-country) are \emph{excluded} from model inputs and retained only for
-the bias audit (\S\ref{sec:bias}).
+country and the Pakistan flag \texttt{is\_pakistan}) are \emph{excluded}
+from model inputs by \texttt{split\_features} in \texttt{train.py} and are
+retained only for the bias audit (\S\ref{sec:bias}). An earlier training run
+had included \texttt{is\_pakistan} by mistake; removing it changed no metric
+by more than 0.1 percentage points.
 
 \subsection{Hyperparameter Tuning}
 
@@ -72,25 +91,26 @@ the values explored and the final selection.
 
 \begin{table}[h]
 \centering
+\small
 \caption{Hyperparameter search space and final values.}
 \label{tab:hparams}
 \begin{tabular}{llll}
 \toprule
-\textbf{Parameter} & \textbf{Values Tested} & \textbf{Final Value}
+\textbf{Parameter} & \textbf{Values Tested} & \textbf{Final}
   & \textbf{Justification} \\
 \midrule
 \texttt{n\_estimators}      & 50, 200, 300, 400, 500 & 500
-  & Validation macro-F1 still rising at 300; plateaus near 500 \\
+  & Validation loss still falling past round 300 \\
 \texttt{max\_depth}         & 3, 5, 6, 7             & 6
-  & Depth 3 underfits (F1 0.30); depth 7 overfits on minority classes \\
+  & Depth 3 underfits; depth 7 overfits minority classes \\
 \texttt{learning\_rate}     & 0.01, 0.05, 0.1        & 0.05
-  & Lower rate with more trees outperforms high rate with few trees \\
+  & Lower rate with more trees beats high rate with few \\
 \texttt{subsample}          & 0.7, 0.8, 1.0          & 0.8
-  & Stochastic subsampling reduces variance on the imbalanced set \\
+  & Row subsampling reduces variance \\
 \texttt{colsample\_bytree}  & 0.6, 0.8, 1.0          & 0.8
-  & Feature subsampling decorrelates trees without hurting recall \\
+  & Feature subsampling decorrelates trees \\
 \texttt{min\_child\_weight} & 5, 10, 20              & 10
-  & Prevents splits on tiny Law/Pure-Sciences leaf nodes \\
+  & Prevents splits on tiny Law leaf nodes \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -104,12 +124,14 @@ the values explored and the final selection.
 \subsection{Validation Strategy}
 
 The dataset was partitioned into training (65\,004 rows) and test
-(16\,252 rows) splits using stratified sampling in Phase~1, ensuring
+(16\,252 rows) splits using stratified sampling in Phase~2, ensuring
 each of the seven houses is represented proportionally in both splits.
-During hyperparameter search we applied \textbf{3-fold stratified
-cross-validation} on the training split. Final performance figures are
-reported on the held-out test split, which the model never saw during
-training or search.
+During training, 15\% of the training split is held out as a validation
+set for the loss curves; during hyperparameter search we applied
+\textbf{stratified cross-validation} on the training split. Final
+performance figures are reported on the held-out test split, which the
+model never saw during training or search
+(\texttt{src/evaluation/evaluate.py}).
 
 \subsection{Metric Analysis}
 
@@ -127,20 +149,22 @@ We report five metrics and justify each for this problem.
     class, penalising the model for failing on minority classes such
     as Law (534 test samples).
 
-  \item \textbf{AUC-ROC (macro one-vs-rest).}  Measures probability
-    calibration: how well the model's confidence scores separate each
-    house from the remaining six. A well-calibrated model is essential
-    because the app displays probabilities to students and parents.
+  \item \textbf{AUC-ROC (macro one-vs-rest).}  Measures how well the
+    model's probability scores separate each house from the remaining
+    six, which matters because the app displays probabilities to
+    students and parents.
 \end{itemize}
 
 \subsection{Results}
 
-Table~\ref{tab:results} compares the Phase~1 baseline against the final
-XGBoost model. The final model exceeds every baseline figure.
+Table~\ref{tab:results} compares the Phase~2 baselines against the final
+XGBoost model. The final model exceeds every baseline on top-$k$ accuracy
+and macro-F1.
 
 \begin{table}[h]
 \centering
-\caption{Baseline vs.\ final model on the held-out test set
+\small
+\caption{Baselines vs.\ final model on the held-out test set
          (16\,252 students, 7 houses).}
 \label{tab:results}
 \begin{tabular}{lcccc}
@@ -148,14 +172,15 @@ XGBoost model. The final model exceeds every baseline figure.
 \textbf{Model} & \textbf{Top-1} & \textbf{Top-2}
   & \textbf{Top-3} & \textbf{Macro-F1} \\
 \midrule
-Always predict majority class   & 46.4\% & ---    & ---    & --- \\
-Logistic Regression (Phase 1)   & 36.8\% & 55.1\% & 71.4\% & 0.30 \\
-Gradient Boosting 30-feat (Phase 1) & 53.0\% & 73.0\% & 83.4\% & 0.28 \\
-Gradient Boosting 88-feat (Phase 1) & 56.6\% & 76.2\% & 86.0\% & 0.35 \\
-\textbf{XGBoost 89-feat (ours)} & \textbf{57.2\%} & \textbf{76.6\%}
-  & \textbf{86.6\%} & \textbf{0.361} \\
+Always predict majority class          & 46.4\% & ---    & ---    & --- \\
+Logistic Regression (Phase 2)          & 36.8\% & 55.1\% & 71.4\% & 0.30 \\
+Gradient Boosting, 30 feat.\ (Phase 2) & 53.0\% & 73.0\% & 83.4\% & 0.28 \\
+Gradient Boosting, 88 feat.\ (Phase 2) & 56.6\% & 76.2\% & 86.0\% & 0.35 \\
+XGBoost 88 feat., class-balanced       & 47.9\% & 68.5\% & 81.1\% & \textbf{0.382} \\
+\textbf{XGBoost 88 feat.\ (final)}     & \textbf{57.1\%} & \textbf{76.5\%}
+  & \textbf{86.4\%} & 0.358 \\
 \midrule
-AUC-ROC (macro OvR) & \multicolumn{4}{c}{0.734} \\
+AUC-ROC, final model (macro OvR) & \multicolumn{4}{c}{0.798} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -164,12 +189,12 @@ The confusion matrix is shown in Figure~\ref{fig:cm}.
 
 \begin{figure}[h]
   \centering
-  \includegraphics[width=0.82\linewidth]{figures/confusion_matrix.png}
-  \caption{Confusion matrix on the 16\,252-student test set.
-           Rows are true houses; columns are predicted houses.
-           Class indices: 0~=~Arts \& Humanities, 1~=~Engineering,
-           2~=~Pure Sciences, 3~=~Business \& Commerce, 4~=~Law,
-           5~=~Medicine \& Health, 6~=~CS \& IT.}
+  \includegraphics[width=0.72\linewidth]{figures/confusion_matrix.png}
+  \caption{Confusion matrix of the final model on the 16\,252-student test
+           set. Rows are true houses; columns are predicted houses.
+           Class indices: 0~=~Arts, Humanities \& Social Sciences,
+           1~=~Business \& Commerce, 2~=~CS \& IT, 3~=~Engineering,
+           4~=~Law, 5~=~Medicine \& Health, 6~=~Pure Sciences.}
   \label{fig:cm}
 \end{figure}
 
@@ -181,34 +206,22 @@ training and validation splits across all 500 boosting rounds.
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.88\linewidth]{figures/loss_curve.png}
-  \caption{XGBoost log-loss per boosting round. Validation loss
-           plateaus at round~$\approx 150$ while training loss
-           continues to decrease, indicating the model reaches
-           its generalisation limit well before the 500-round
-           budget. Future training runs should apply early
-           stopping at round 150 to reduce compute cost by 70\%
-           without sacrificing test performance.}
+  \caption{XGBoost log-loss per boosting round. Validation loss reaches its
+           minimum around round~370 (1.218) and stays flat afterwards
+           (1.221 at round 500), while training loss keeps decreasing.
+           The model has reached its generalisation limit; early stopping
+           near round 370 would save about 25\% of training time without
+           changing test performance.}
   \label{fig:loss}
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=0.88\linewidth]{figures/architecture.png}
-  \caption{End-to-end pipeline: raw survey responses are
-           preprocessed by a scikit-learn \texttt{ColumnTransformer},
-           fed into the XGBoost ensemble, and the softmax output
-           probabilities are ranked to produce the top-3 house
-           recommendations shown to the student.}
-  \label{fig:arch}
 \end{figure}
 
 \subsection{Cross-Validation Results}
 
 To confirm the test-set results are not an artefact of a single
 split, we ran 5-fold stratified cross-validation on the full
-training set (65,004 rows) using the final hyperparameter
+training set (65\,004 rows) using the final hyperparameter
 configuration with \texttt{n\_estimators=200} to keep runtime
-tractable. Results:
+tractable.
 
 \begin{table}[h]
 \centering
@@ -218,64 +231,60 @@ tractable. Results:
 \toprule
 \textbf{Metric} & \textbf{Mean} & \textbf{Std Dev} \\
 \midrule
-Macro-F1  & 0.3422 & $\pm$ 0.0049 \\
-Accuracy  & 0.5601 & $\pm$ 0.0031 \\
+Macro-F1  & 0.343 & $\pm$ 0.005 \\
+Accuracy  & 0.561 & $\pm$ 0.003 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 The low standard deviation ($\pm$0.005 on macro-F1 across five folds)
 confirms that performance is stable and not sensitive to the choice
-of held-out split. The CV macro-F1 of 0.342 is consistent with the
-held-out test macro-F1 of 0.361, confirming no overfitting to the
-test split.
+of split. The CV macro-F1 of 0.343 (200 trees) is consistent with the
+held-out test macro-F1 of 0.358 (500 trees), confirming no overfitting to
+the test split.
 
 \subsection{Error Analysis}
 
-Per-class recall derived from the confusion matrix diagonal reveals
-where the model struggles most (Table~\ref{tab:recall}).
+Per-class recall from the confusion matrix shows where the final model
+struggles (Table~\ref{tab:recall}).
 
 \begin{table}[h]
 \centering
-\caption{Per-class recall on the test set.}
+\caption{Per-class recall of the final model on the test set.}
 \label{tab:recall}
-\begin{tabular}{lcc}
+\begin{tabular}{lccl}
 \toprule
-\textbf{House} & \textbf{Test samples} & \textbf{Recall} \\
+\textbf{House} & \textbf{Test samples} & \textbf{Recall} & \textbf{Most often predicted as} \\
 \midrule
-Arts, Humanities \& Social Sciences & 7\,536 & 39.1\% \\
-Engineering                         & 3\,017 & 41.0\% \\
-Business \& Commerce                & 1\,418 & 41.7\% \\
-CS \& IT                            & 1\,503 & 37.5\% \\
-Medicine \& Health                  & 1\,570 & 34.5\% \\
-Pure Sciences                       &   674  & 28.6\% \\
-\textbf{Law}                        & \textbf{534} & \textbf{15.5\%} \\
+Arts, Humanities \& Social Sciences & 7\,536 & 84.9\% & Business (595) \\
+Business \& Commerce                & 3\,017 & 47.8\% & Arts (1\,289) \\
+Engineering                         & 1\,418 & 35.4\% & Arts (504) \\
+Medicine \& Health                  & 1\,570 & 32.8\% & Arts (734) \\
+Pure Sciences                       & 1\,503 & 22.8\% & Arts (728) \\
+CS \& IT                            &   674  & 12.0\% & Arts (264) \\
+\textbf{Law}                        & \textbf{534} & \textbf{0.9\%} & Arts (384) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Three patterns emerge from the confusion matrix:
+Three patterns emerge:
 
 \begin{enumerate}
-  \item \textbf{Law is the hardest class (recall 15.5\%).}
-    Law students are most frequently misclassified into Arts \& Humanities
-    (237 cases) and Medicine (144 cases). This is expected: the RIASEC
-    profile of a law-oriented student overlaps heavily with social and
-    investigative types that also appear in Arts and Medicine. Law is also
-    the smallest class (534 test samples), so the model has seen fewer
-    examples to learn a discriminative boundary.
+  \item \textbf{The majority class absorbs uncertain students.} Arts
+    \& Social Sciences is 46.4\% of the data, and the model predicts it for
+    10\,302 of 16\,252 test students. Every other house loses most of its
+    errors to Arts.
 
-  \item \textbf{Pure Sciences is confused with Business and Engineering.}
-    193 of 674 Pure Sciences students are correctly identified, while 162
-    are predicted as Business and 111 as Engineering. RIASEC
-    investigative scores are shared across all three fields, making
-    separation difficult without additional task-based signal.
+  \item \textbf{Law is almost never predicted (recall 0.9\%).} Only 11
+    test students are predicted as Law. Law students' RIASEC profiles
+    overlap heavily with Social and Enterprising types that dominate Arts
+    and Business, and Law is the smallest class. The class-balanced
+    variant raises Law recall to 17.6\% and CS \& IT recall from 12.0\% to
+    35.3\%, at the cost of 9 points of top-1 accuracy.
 
-  \item \textbf{Arts \& Humanities dominates false positives.}
-    As the majority class (46.4\% of the test set), Arts receives a
-    disproportionate share of misclassified students from every other
-    house. Despite balanced class weighting, the model still leans toward
-    the majority when uncertain.
+  \item \textbf{Top-3 is far more reliable than top-1.} Because the true
+    house is usually the model's second or third choice when it is not
+    the first, the top-3 list contains it 86.4\% of the time.
 \end{enumerate}
 
 These failure modes motivate two planned improvements: (i) the
@@ -289,59 +298,59 @@ will anchor the model to local degree norms.
 
 We audited model performance across two sensitive attributes:
 \textbf{gender} and \textbf{Pakistan-residency status}
-(\texttt{is\_pakistan}). Neither attribute is an input to the model;
-they are used solely for this post-hoc analysis.
-Figure~\ref{fig:bias} and Table~\ref{tab:bias} summarise the results.
+(\texttt{is\_pakistan}) with \texttt{src/utils/bias\_check.py}. Neither
+attribute is an input to the model; they are used solely for this
+post-hoc analysis. Figure~\ref{fig:bias} and Table~\ref{tab:bias}
+summarise the results.
 
 \begin{figure}[h]
   \centering
-  \includegraphics[width=0.72\linewidth]{figures/bias_gender.png}
+  \includegraphics[width=0.6\linewidth]{figures/bias_gender.png}
   \caption{Macro-F1 by gender subgroup.}
   \label{fig:bias}
 \end{figure}
 
 \begin{table}[h]
 \centering
-\caption{Macro-F1 by sensitive subgroup.}
+\caption{Macro-F1 by sensitive subgroup (final model).}
 \label{tab:bias}
 \begin{tabular}{llcc}
 \toprule
 \textbf{Attribute} & \textbf{Group} & \textbf{n} & \textbf{Macro-F1} \\
 \midrule
-Gender & Female & 10\,978 & 0.293 \\
-Gender & Male   &  5\,179 & 0.286 \\
-Gender & Other  &     76  & 0.251 \\
+Gender & Female & 10\,978 & 0.330 \\
+Gender & Male   &  5\,179 & 0.358 \\
+Gender & Other  &     76  & 0.233 \\
 \midrule
-Pakistan residency & Non-Pakistan & 16\,190 & 0.303 \\
-Pakistan residency & Pakistan     &     62  & 0.253 \\
+Pakistan residency & Non-Pakistan & 16\,190 & 0.359 \\
+Pakistan residency & Pakistan     &     62  & 0.271 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Gender.}
-The gap between female (0.293) and male (0.286) subgroups is
-small (0.007) and within expected sampling variance. The ``other''
-gender group scores lower (0.251), but its sample is too small
-($n=76$) to draw firm conclusions. No corrective intervention
-is warranted at this stage.
+The model performs somewhat better for male (0.358) than female (0.330)
+students, a gap of 0.028. A likely cause is the gender skew within houses
+(Figure~\ref{fig:gender}): Engineering and CS are about two-thirds male,
+and these are the houses the model already finds hardest, so errors there
+weigh differently on each group. The ``other'' gender group scores lower
+(0.233), but its sample is too small ($n=76$) for firm conclusions.
 
 \paragraph{Pakistan residency.}
-Pakistani respondents ($n=62$) show a macro-F1 of 0.253 compared
-to 0.303 for non-Pakistani respondents. This gap is attributable
-to two factors: (i) the training data is drawn predominantly from
-a Western, English-speaking population (Open Psychometrics), so
-the model has not seen enough Pakistani interest profiles to
-generalise well, and (ii) the sample of 62 is too small for a
-reliable estimate. The ongoing Pakistani student survey
-(\S\,survey) is specifically designed to close this gap in future
-training iterations.
+Pakistani respondents ($n=62$) show a macro-F1 of 0.271 compared
+to 0.359 for non-Pakistani respondents. Two factors explain this:
+(i) the training data comes predominantly from a Western, English-speaking
+population (Open Psychometrics), so the model has seen few Pakistani
+interest profiles, and (ii) 62 students is too small a sample for a
+reliable estimate. The Pakistani student survey (Section~2) is designed
+to close this gap in future training iterations.
 
 \paragraph{Mitigation already in place.}
-Balanced class weighting reduces performance disparity caused by
-class imbalance. Sensitive attributes are excluded from model
-inputs, preventing direct discrimination. The bias audit will be
-repeated once the Pakistani survey data is incorporated, and
-thresholds will be adjusted if the gap persists.
+Sensitive attributes are excluded from model inputs, preventing direct
+discrimination, and the class-balanced variant is available if minority-house
+recall is prioritised. The bias audit will be repeated once the Pakistani
+survey data is incorporated, and reweighting by region and gender will be
+applied if the gaps persist.
 
 % ============================================================
 %  CONTRIBUTION TABLE
@@ -349,28 +358,41 @@ thresholds will be adjusted if the gap persists.
 
 \section{Team Contribution}
 
+Table~\ref{tab:contrib} maps each Git commit author to the modules they
+committed, taken from the repository history.
+
 \begin{table}[h]
 \centering
+\small
 \caption{Git commit author to project module mapping.}
 \label{tab:contrib}
-\begin{tabular}{lll}
+\begin{tabular}{p{3.4cm}p{5.4cm}p{6.2cm}}
 \toprule
 \textbf{Author} & \textbf{Module / File} & \textbf{Description} \\
 \midrule
 Muhammad Hasan Butt (24L-3022)
-  & \texttt{src/models/model.py}   & XGBoost and RF architecture definitions \\
-  & \texttt{src/models/train.py}   & Training loop, hyperparameter tuning \\
-  & \texttt{data\_scripts/build\_features.py}
-                                   & Added 58 raw item columns to feature set \\
+  & \texttt{data\_scripts/clean\_pakistan.py} & ILO, World Bank and Rozee.pk cleaning \\
+  & \texttt{data\_scripts/build\_features.py} & Feature engineering, scaling; added 58 raw item columns \\
+  & \texttt{data\_scripts/evaluate\_supplementary.py}, \texttt{baseline\_models.py} & Supplementary-dataset test, Phase~2 baselines \\
+  & \texttt{src/models/model.py}, \texttt{src/models/train.py} & Model architectures, XGBoost training, loss curves \\
+  & \texttt{report/phase3\_4\_sections.tex} & Phase 3--4 report sections \\
 \midrule
 Kabeer Ahmed Shahzeb (24L-3087)
-  & \texttt{src/evaluation/evaluate.py}
-                                   & Top-k accuracy, AUC-ROC, confusion matrix \\
+  & \texttt{README.md}, \texttt{requirements.txt}, \texttt{.gitignore} & Project setup \\
+  & \texttt{data\_scripts/collect\_data.py} & Data collection (APIs, scraping), collection log \\
+  & \texttt{data\_scripts/house\_mapping.py}, \texttt{clean\_riasec.py} & RIASEC cleaning, major-to-house mapping \\
+  & \texttt{src/evaluation/evaluate.py} & Top-$k$ accuracy, AUC-ROC, confusion matrix \\
+  & \texttt{src/models/train.py} (fix) & Restored shared helpers; excluded sensitive columns \\
+  & \texttt{report/main.tex} & Report integration and this table \\
 \midrule
 Muhammad Moosa Khan Rokhri (24L-3070)
-  & \texttt{src/utils/bias\_check.py}
-                                   & Gender and Pakistan-status subgroup audit \\
+  & \texttt{survey/} & Pakistani student survey specification \\
+  & \texttt{data\_scripts/eda.py}, \texttt{report/figures/} & Exploratory data analysis and figures \\
+  & \texttt{report/main.tex}, \texttt{main.pdf} (Deliverable 1) & Deliverable 1 report \\
+  & \texttt{src/utils/bias\_check.py}$^{*}$ & Gender and Pakistan-status subgroup audit \\
 \bottomrule
 \end{tabular}
+
+\smallskip
+\footnotesize $^{*}$Moosa's assigned module; committed by Kabeer on his behalf at the deadline.
 \end{table}
-EOF

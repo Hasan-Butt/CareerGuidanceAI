@@ -20,7 +20,7 @@
 
 \title{\textbf{PakCareer AI}\\[2pt]
 \large Data-driven degree guidance for Pakistani college graduates\\[2pt]
-\normalsize Deliverable 1: Problem Definition \& Data Foundations (Track A)}
+\normalsize Deliverables 1--2: Data Foundations, Model Implementation \& Evaluation (Track A)}
 \author{
 Kabeer Ahmed Shahzeb (24L-3087) \and Muhammad Hasan Butt (24L-3022) \and Muhammad Moosa Khan Rokhri (24L-3070)\\[4pt]
 \small FAST School of Computing, National University of Computer and Emerging Sciences, Lahore
@@ -498,6 +498,9 @@ Gradient boosting, 30 features & 53.0\% & 73.0\% & 83.4\% & 0.28 \\
 \end{itemize}
 
 % ------------------------------------------------------------------
+\input{phase3_4_sections}
+
+% ------------------------------------------------------------------
 \section{Challenges and Limitations}
 \begin{itemize}
 \item \textbf{Label noise.} Majors are self-reported free text, and some respondents are students
@@ -511,10 +514,10 @@ Gradient boosting, 30 features & 53.0\% & 73.0\% & 83.4\% & 0.28 \\
       only from ILO data.
 \end{itemize}
 
-\section{Next Steps (Phases 3--4)}
-Train and compare logistic regression, random forest, gradient boosting and an MLP on the
-prepared split with class weights. Report accuracy, macro-F1 and a confusion matrix. Run the bias
-check by gender and on the Pakistani subset. Build the hosted web app and report generator.
+\section{Next Steps}
+Deploy the final XGBoost model behind an API with a hosted web front end that shows each student
+their top-3 houses with probabilities and the Pakistan statistics report. Add the task-based career
+simulations as new features, incorporate the Pakistani survey responses, and repeat the bias check.
 
 \section*{Repository}
 \begin{tabular}{@{}ll@{}}
@@ -536,6 +539,7 @@ check by gender and on the Pakistani subset. Build the hosted web app and report
 \bibitem{ilo} International Labour Organization, ILOSTAT SDMX API, \url{https://sdmx.ilo.org}.
 \bibitem{wb} World Bank, World Development Indicators API, \url{https://api.worldbank.org}.
 \bibitem{rozee} Rozee.pk job search, \url{https://www.rozee.pk}, accessed 18 October 2026.
+\bibitem{grinsztajn2022tree} L.~Grinsztajn, E.~Oyallon and G.~Varoquaux, ``Why do tree-based models still outperform deep learning on typical tabular data?'' \emph{NeurIPS Datasets and Benchmarks Track}, 2022.
 \end{thebibliography}
 
 \end{document}
