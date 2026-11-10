@@ -155,7 +155,7 @@ features, and our Pakistani survey data.
 ## Model Weights (Deliverable 2)
 
 The trained model weights exceed GitHub's recommended file size.
-Download from Google Drive: [LINK - to be updated]
+Download from Google Drive: [Google Drive model weights](https://drive.google.com/drive/folders/1wk0N7zRLVq2g-ZGwCaSXhBhAJ8mxHcxa)
 
 Place files at:
 - `models/weights/final_model.pkl`
