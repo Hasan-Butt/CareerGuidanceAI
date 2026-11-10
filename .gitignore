@@ -5,6 +5,8 @@ data/
 *.jsonl
 *.zip
 *.joblib
+final_model.pkl
+models/weights/*.pkl
 
 # survey responses contain personal answers
 survey/*responses*
