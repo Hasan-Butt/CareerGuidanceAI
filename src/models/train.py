@@ -13,14 +13,49 @@ from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier
 
 ROOT = Path(__file__).resolve().parents[2]
-TRAIN_PATH = ROOT / "data" / "processed" / "train.csv"
-TEST_PATH = ROOT / "data" / "processed" / "test.csv"
 WEIGHTS_DIR = ROOT / "models" / "weights"
+
+# Kept beside the data only for the bias check (src/utils/bias_check.py), never as model inputs.
+SENSITIVE_COLUMNS = {"gender", "country", "religion", "race", "orientation", "is_pakistan"}
+TARGET_CANDIDATES = ("label", "house", "target", "y")
+
+
+def locate_processed_file(filename: str) -> Path:
+    preferred = ROOT / "data" / "processed" / filename
+    if preferred.exists():
+        return preferred
+    matches = [
+        path for path in ROOT.rglob(filename)
+        if ".git" not in path.parts and "site-packages" not in path.parts
+    ]
+    if matches:
+        return matches[0]
+    raise FileNotFoundError(
+        f"Could not locate {filename}. Expected {preferred} or another project-local copy."
+    )
+
+
+def detect_label(frame: pd.DataFrame) -> str:
+    for candidate in TARGET_CANDIDATES:
+        if candidate in frame.columns:
+            return candidate
+    raise ValueError(
+        "Could not auto-detect the label column. Expected one of: "
+        + ", ".join(TARGET_CANDIDATES)
+    )
+
+
+def split_features(frame: pd.DataFrame, label: str):
+    drop_columns = {label, *TARGET_CANDIDATES, *SENSITIVE_COLUMNS}
+    feature_columns = [column for column in frame.columns if column not in drop_columns]
+    if not feature_columns:
+        raise ValueError("No model features remain after removing labels and sensitive columns.")
+    return frame[feature_columns], frame[label], feature_columns
 
 
 def main() -> None:
-    train = pd.read_csv(TRAIN_PATH)
-    test = pd.read_csv(TEST_PATH)
+    train = pd.read_csv(locate_processed_file("train.csv"))
+    test = pd.read_csv(locate_processed_file("test.csv"))
 
     print("Train columns:")
     print(list(train.columns))
@@ -29,15 +64,10 @@ def main() -> None:
     print(list(test.columns))
     print(f"Test column count: {len(test.columns)}")
 
-    label = "label" if "label" in train.columns else (
-        "house" if "house" in train.columns else train.columns[-1]
-    )
-    # ``house`` is a duplicate string target in these generated splits when
-    # ``label`` is selected, so it cannot be passed as a numeric feature.
-    excluded = {label, "house", "gender", "religion", "race", "orientation", "country"}
-    feature_columns = [column for column in train.columns if column not in excluded]
-    X_train, y_train = train[feature_columns], train[label]
-    X_test, y_test = test[feature_columns], test[label]
+    label = detect_label(train)
+    # drops the label, the duplicate string target ``house`` and every sensitive column
+    X_train, y_train, feature_columns = split_features(train, label)
+    X_test, y_test, _ = split_features(test, label)
     print(f"Features used: {len(feature_columns)}")
 
     le = LabelEncoder()
