@@ -22,7 +22,7 @@ def build_gradient_boosting(
         subsample=subsample,
         min_samples_leaf=min_samples_leaf,
         random_state=42,
-        verbose=1
+        verbose=0
     )
 
 def build_random_forest(

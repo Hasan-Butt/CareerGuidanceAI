@@ -1,0 +1,6 @@
+attribute,group,n,macro_f1
+gender,female,10978,0.293
+gender,male,5179,0.286
+gender,other,76,0.251
+is_pakistan,0,16190,0.303
+is_pakistan,1,62,0.253

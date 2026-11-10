@@ -151,3 +151,20 @@ features, and our Pakistani survey data.
   statistics and are never redistributed.
 - The survey collects no names, emails or roll numbers.
 - Open data licences: O*NET (CC BY 4.0), World Bank (CC BY 4.0), ILOSTAT (attribution).
+
+## Model Weights (Deliverable 2)
+
+The trained model weights exceed GitHub's recommended file size.
+Download from Google Drive: [LINK - to be updated]
+
+Place files at:
+- `models/weights/final_model.pkl`
+- `models/weights/label_encoder.pkl`
+
+## Requirements
+
+Install dependencies:
+
+```text
+pip install -r requirements.txt
+```

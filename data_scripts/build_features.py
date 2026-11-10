@@ -48,6 +48,10 @@ ORDINAL = ["education"]                        # 1 < 2 < 3 < 4, unknown -> 0
 NOMINAL = ["urban", "engnat", "holland_code"]  # one-hot, unknown kept as its own level
 BINARY = ["fake_word_flag"]
 TARGET = "house"
+RAW_ANSWERS = (
+    [f"{letter}{item}" for letter in SCALES for item in range(1, 9)]
+    + [f"TIPI{item}" for item in range(1, 11)]
+)
 
 
 def engineer(df):
@@ -86,7 +90,7 @@ def build_preprocessor():
 
 def main():
     df = pd.read_csv(os.path.join(PROC, "riasec_clean.csv"), low_memory=False)
-    feats = engineer(df)
+    feats = pd.concat([engineer(df), df[RAW_ANSWERS]], axis=1)
     feats.to_csv(os.path.join(PROC, "features_all.csv"), index=False)
 
     train, test = train_test_split(feats, test_size=0.2, stratify=feats[TARGET], random_state=42)
@@ -103,6 +107,7 @@ def main():
 
     for part, X, src in (("train", X_train, train), ("test", X_test, test)):
         out = pd.DataFrame(X, columns=names)
+        out[RAW_ANSWERS] = src[RAW_ANSWERS].reset_index(drop=True)
         out["label"] = src[TARGET].map(label).values
         out["house"] = src[TARGET].values
         out["gender"] = src["gender"].values            # bias check only, not a feature
