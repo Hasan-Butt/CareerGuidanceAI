@@ -155,10 +155,13 @@ features, and our Pakistani survey data.
 ## Model Weights (Deliverable 2)
 
 The trained model weights exceed GitHub's recommended file size.
-Download from Google Drive: [Google Drive model weights](https://drive.google.com/drive/folders/1wk0N7zRLVq2g-ZGwCaSXhBhAJ8mxHcxa)
+Download from Google Drive (`CareerAI_Data/models/`):
+- **XGBoost model (`xgb_model.pkl`)**: [Download `xgb_model.pkl`](https://drive.google.com/file/d/1erH2Sic3QRW17VjYfdx7g94rLgVWB2Ie/view)
+- **Label encoder (`label_encoder.pkl`)**: [Download `label_encoder.pkl`](https://drive.google.com/file/d/1mxofGbPWvOwpudmXs3_3xgg2S09qcBmc/view)
+- **Models folder (`CareerAI_Data/models/`)**: [Google Drive folder](https://drive.google.com/drive/folders/1xzh87k7OH8VEtWSky9fCPPpv-ZsJLH2X)
 
 Place files at:
-- `models/weights/final_model.pkl`
+- `models/weights/final_model.pkl` (renamed from `xgb_model.pkl`)
 - `models/weights/label_encoder.pkl`
 
 ## Requirements

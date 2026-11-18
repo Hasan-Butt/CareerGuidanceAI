@@ -1,5 +1,6 @@
 """Evaluate the saved classifier and create its confusion matrix."""
 
+import json
 from pathlib import Path
 import sys
 
@@ -20,12 +21,45 @@ sys.path.insert(0, str(ROOT))
 from src.models.train import detect_label, locate_processed_file, split_features
 
 
+def load_model(model_path: Path):
+    """Load the saved model, handling cross-OS XGBoost rng_state pickle mismatches."""
+    try:
+        return joblib.load(model_path)
+    except Exception as exc:
+        if "input stream corrupted" not in str(exc):
+            raise
+        import xgboost as xgb
+        import xgboost.core as xgc
+
+        captured = {}
+        original_setstate = xgc.Booster.__setstate__
+
+        def _capture_state(self, state):
+            captured["handle"] = bytes(state["handle"])
+            self.handle = None
+
+        xgc.Booster.__setstate__ = _capture_state
+        try:
+            model = joblib.load(model_path)
+        finally:
+            xgc.Booster.__setstate__ = original_setstate
+
+        buf = captured.get("handle", b"")
+        model_idx = buf.find(b"Model{")
+        if model_idx == -1:
+            raise
+        booster = xgb.Booster()
+        booster.load_model(bytearray(buf[model_idx + 5 : -1]))
+        model._Booster = booster
+        return model
+
+
 def main() -> None:
     test = pd.read_csv(locate_processed_file("test.csv"))
     label = detect_label(test)
     X_test, y_test, _ = split_features(test, label)
     model_path = ROOT / "models" / "weights" / "final_model.pkl"
-    model = joblib.load(model_path)
+    model = load_model(model_path)
     y_pred = model.predict(X_test)
     y_prob = model.predict_proba(X_test)
     classes = np.asarray(model.classes_)
@@ -33,7 +67,9 @@ def main() -> None:
     y_indices = np.array([class_indices[value] for value in y_test])
     rankings = np.argsort(y_prob, axis=1)
 
-    print("Classification report:\n" + classification_report(y_test, y_pred, zero_division=0))
+    report_text = classification_report(y_test, y_pred, zero_division=0)
+    report_dict = classification_report(y_test, y_pred, zero_division=0, output_dict=True)
+    print("Classification report:\n" + report_text)
     top1 = float(np.mean(y_pred == y_test))
     top2 = float(np.mean([y_indices[i] in rankings[i, -2:] for i in range(len(y_indices))]))
     top3 = float(np.mean([y_indices[i] in rankings[i, -3:] for i in range(len(y_indices))]))
@@ -44,17 +80,32 @@ def main() -> None:
     print(f"Top-2 accuracy: {top2:.4f}")
     print(f"Top-3 accuracy: {top3:.4f}")
     print(f"AUC-ROC (macro OvR): {auc:.4f}")
-    print("\nSummary metrics:")
-    print(pd.DataFrame([{
+    summary_row = {
         "top1": top1,
         "top2": top2,
         "top3": top3,
         "macro_f1": macro_f1,
         "auc_roc_macro_ovr": auc,
-    }]).to_string(index=False))
+    }
+    summary_df = pd.DataFrame([summary_row])
+    print("\nSummary metrics:")
+    print(summary_df.to_string(index=False))
 
     output_dir = ROOT / "report" / "figures"
     output_dir.mkdir(parents=True, exist_ok=True)
+    metrics_csv_path = output_dir / "evaluation_metrics.csv"
+    summary_df.to_csv(metrics_csv_path, index=False)
+    print(f"Created: {metrics_csv_path}")
+
+    metrics_json_path = output_dir / "evaluation_metrics.json"
+    metrics_payload = {
+        **summary_row,
+        "n_test_samples": int(len(y_test)),
+        "classification_report": report_dict,
+    }
+    metrics_json_path.write_text(json.dumps(metrics_payload, indent=2), encoding="utf-8")
+    print(f"Created: {metrics_json_path}")
+
     figure_path = output_dir / "confusion_matrix.png"
     fig, ax = plt.subplots(figsize=(10, 8))
     ConfusionMatrixDisplay.from_predictions(
