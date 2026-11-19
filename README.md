@@ -24,25 +24,38 @@ interests (RIASEC) and personality (Big Five), and backs the recommendation with
 | Deliverable | Phases | Status |
 |---|---|---|
 | 1 | Problem definition, data acquisition & preprocessing | ✅ Report: [`report/main.pdf`](report/main.pdf) |
-| 2 | Model implementation & evaluation | upcoming |
-| 3 | Hosted web app + final report | upcoming |
+| 2 | Model implementation & evaluation | ✅ XGBoost (top-3 **86.5%** on 16,252 students) |
+| 3 | Hosted web app + final report | ✅ Streamlit app in [`app/`](app/) (premium wizard + demo PAAS) |
+
+## Run the web app
+
+```bash
+pip install -r requirements.txt
+# place model weights (see Model Weights below)
+streamlit run app/app.py
+```
+
+**Student flow:** multi-step wizard (demographics → 48 RIASEC items → TIPI → vocabulary checklist → results).  
+**Counsellor / school demo:** sidebar → *Counsellor workspace*; demo invite codes `FAST-LAHORE`, `COUNSEL-DEMO`, `LGS-DEMO`. Sessions save locally to `data/app/sessions.db` with shareable Session IDs and PDF parent packs.
 
 ## Repository layout
 
 ```
 pakcareer-ai/
-├── data_scripts/              # all Phase 2 code
-│   ├── collect_data.py        # downloads every raw source, writes data/raw/collection_log.json
-│   ├── house_mapping.py       # free text (major / job title) -> house rules
-│   ├── clean_riasec.py        # missing values, validity checks, outliers, duplicates, labels
-│   ├── clean_pakistan.py      # ILO, World Bank, Rozee.pk cleaning
-│   ├── build_features.py      # feature engineering, scaling, encoding, train/test split
-│   ├── eda.py                 # every chart in the report
-│   ├── evaluate_supplementary.py  # tests the 10 Kaggle datasets for learnable signal
-│   └── baseline_models.py     # preliminary baselines (top-1/2/3 accuracy, macro-F1)
+├── app/                       # Streamlit product
+│   ├── app.py                 # multi-step wizard + counsellor workspace
+│   ├── predictor.py           # 88-feature inference
+│   ├── pakistan_stats.py      # ILO / Rozee house cards
+│   ├── questions.py           # RIASEC / TIPI / vocab content
+│   ├── storage.py             # SQLite sessions + org invite codes
+│   ├── report_pdf.py          # parents' PDF report
+│   └── styles.css             # premium theme
+├── src/models/                # training + evaluation
+├── data_scripts/              # Phase 2 data pipeline
 ├── docs/                      # collection + cleaning logs (evidence, small JSON)
 ├── report/                    # LaTeX source, figures, compiled PDF
 ├── survey/                    # Google Form spec for the Pakistani student survey
+├── models/weights/            # NOT in git — download from Drive
 ├── data/                      # NOT in git, see "Getting the data"
 ├── requirements.txt
 └── .gitignore

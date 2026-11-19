@@ -194,11 +194,17 @@ def build_feature_row(
     education: int,
     familysize: int,
     vocab_known: int,
+    urban: str = "unknown",
+    engnat: str = "non_native",
+    fake_word_flag: int | float = 0,
 ) -> pd.DataFrame:
     """Build one 88-column feature row matching the training pipeline schema.
 
     riasec_responses: {'R1': 3, 'R2': 4, ..., 'C8': 2} (1-5 scale)
     tipi_responses:   {'TIPI1': 4, ..., 'TIPI10': 3}   (1-7 scale)
+    urban: 'rural' | 'suburban' | 'urban' | 'unknown'
+    engnat: 'native' | 'non_native' | 'unknown'
+    fake_word_flag: 1 if exactly one fake vocab word was claimed, else 0
     """
     raw = {}
 
@@ -232,14 +238,18 @@ def build_feature_row(
     for col, (mean_val, scale_val) in SCALER_STATS.items():
         row[col] = (raw[col] - mean_val) / scale_val
 
-    # 6. Urban / English nativeness one-hot defaults for Pakistani web users
-    row["urban_rural"] = 0.0
-    row["urban_suburban"] = 0.0
-    row["urban_unknown"] = 1.0
-    row["urban_urban"] = 0.0
-    row["engnat_native"] = 0.0
-    row["engnat_non_native"] = 1.0
-    row["engnat_unknown"] = 0.0
+    # 6. Urban / English nativeness one-hots
+    urban_key = (urban or "unknown").lower()
+    if urban_key not in ("rural", "suburban", "urban", "unknown"):
+        urban_key = "unknown"
+    for level in ("rural", "suburban", "unknown", "urban"):
+        row[f"urban_{level}"] = 1.0 if urban_key == level else 0.0
+
+    engnat_key = (engnat or "unknown").lower()
+    if engnat_key not in ("native", "non_native", "unknown"):
+        engnat_key = "unknown"
+    for level in ("native", "non_native", "unknown"):
+        row[f"engnat_{level}"] = 1.0 if engnat_key == level else 0.0
 
     # 7. Holland code one-hot (alphabetical order A, C, E, I, R, S matching OneHotEncoder)
     top_domain = max(RIASEC_DOMAINS, key=lambda feat: raw[feat])
@@ -247,8 +257,8 @@ def build_feature_row(
     for code in ("A", "C", "E", "I", "R", "S"):
         row[f"holland_code_{code}"] = 1.0 if code == top_code else 0.0
 
-    # 8. Fake word flag
-    row["fake_word_flag"] = 0.0
+    # 8. Fake word flag (exactly one fake word claimed → 1, matching training)
+    row["fake_word_flag"] = float(1 if int(fake_word_flag) == 1 else 0)
 
     # 9. Raw RIASEC items (unscaled, matching train.csv)
     for code in ("R", "I", "A", "S", "E", "C"):
@@ -260,6 +270,13 @@ def build_feature_row(
         row[f"TIPI{i}"] = float(tipi_responses.get(f"TIPI{i}", 4))
 
     return pd.DataFrame([row], columns=FEATURE_COLUMNS)
+
+
+def model_files_exist(
+    model_path: str = "models/weights/final_model.pkl",
+    encoder_path: str = "models/weights/label_encoder.pkl",
+) -> bool:
+    return _resolve_path(model_path).exists() and _resolve_path(encoder_path).exists()
 
 
 def predict(model, le, feature_row: pd.DataFrame, top_k: int | None = 3) -> list[dict]:

@@ -8,6 +8,9 @@ data/
 final_model.pkl
 models/weights/*.pkl
 
+# local PAAS demo DB (student sessions)
+data/app/
+
 # survey responses contain personal answers
 survey/*responses*
 survey/*.csv
