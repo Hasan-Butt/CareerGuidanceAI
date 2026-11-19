@@ -7,12 +7,12 @@ services:
     restart: always
     environment:
       POSTGRES_USER: pakcareer
-      POSTGRES_PASSWORD: pakcareer_secret_password
+      # Set POSTGRES_PASSWORD in a .env file next to this compose file (never commit it)
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: pakcareer
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # No published port: only the backend container needs the database.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pakcareer -d pakcareer"]
       interval: 5s
@@ -29,8 +29,11 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg2://pakcareer:pakcareer_secret_password@db:5432/pakcareer
+      DATABASE_URL: postgresql+psycopg2://pakcareer:${POSTGRES_PASSWORD}@db:5432/pakcareer
       PORT: 8000
+      MODEL_DIR: /models/weights
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      ADMIN_KEY: ${ADMIN_KEY:-}
     volumes:
       - ../models:/models:ro
     ports:

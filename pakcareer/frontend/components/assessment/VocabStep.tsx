@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { useAssessmentStore } from "@/lib/store";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -47,7 +47,7 @@ export function VocabStep() {
         vocab_checked: fullVocab,
         age: about.age || 18,
         education: about.education || EDUCATION_OPTIONS[1],
-        familysize: about.familysize || 5,
+        familysize: about.familysize ?? 5,   // 0 is a valid answer
         urban_label: about.urban_label || "Urban",
         engnat_label: about.engnat_label || "No",
         invite_code: about.invite_code || null,

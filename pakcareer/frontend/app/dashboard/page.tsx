@@ -23,16 +23,12 @@ import type { SessionRecord } from "@/lib/types";
 export default function DashboardSessionsPage() {
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [orgFilter, setOrgFilter] = useState<string>("");
   const [search, setSearch] = useState<string>("");
 
-  const loadData = async (org?: string) => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const res = await fetchSessions({
-        org_code: org || undefined,
-        limit: 50,
-      });
+      const res = await fetchSessions({ limit: 50 });
       setSessions(res.sessions || []);
     } catch (err) {
       console.error("Failed to load sessions:", err);
@@ -42,8 +38,8 @@ export default function DashboardSessionsPage() {
   };
 
   useEffect(() => {
-    loadData(orgFilter);
-  }, [orgFilter]);
+    loadData();
+  }, []);
 
   const filtered = sessions.filter((s) => {
     if (!search) return true;
@@ -114,21 +110,11 @@ export default function DashboardSessionsPage() {
       <Card className="border-slate-200">
         <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <select
-              value={orgFilter}
-              onChange={(e) => setOrgFilter(e.target.value)}
-              className="h-10 px-3 text-xs sm:text-sm font-semibold rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0f766e]"
-            >
-              <option value="">All Cohorts / Public</option>
-              <option value="FAST-LAHORE">FAST NUCES Lahore</option>
-              <option value="COUNSEL-DEMO">Demo Counsellor Account</option>
-              <option value="LGS-DEMO">Lahore Grammar School</option>
-            </select>
 
             <Button
               variant="outline"
               size="sm"
-              onClick={() => loadData(orgFilter)}
+              onClick={() => loadData()}
               className="text-xs"
             >
               Refresh

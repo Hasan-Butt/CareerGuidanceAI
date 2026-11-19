@@ -50,11 +50,36 @@ npm run dev
 - Counsellor PAAS Portal: [http://localhost:3000/dashboard](http://localhost:3000/dashboard)
 - Cohort Analytics: [http://localhost:3000/dashboard/analytics](http://localhost:3000/dashboard/analytics)
 
+### 3. Counsellor dashboard access
+Student results are private. The dashboard asks for the institution's **access key**
+and only shows students who used that institution's invite code.
+
+- On first start the backend creates keys for the demo institutions (FAST-LAHORE,
+  COUNSEL-DEMO, LGS-DEMO), prints them in the log and saves them to
+  `pakcareer/demo_keys.local.txt` (gitignored). To pin a key for demos, set e.g.
+  `ORG_KEY_FAST_LAHORE=my-demo-key` before the first start.
+- To add a school, set `ADMIN_KEY` and call
+  `POST /api/orgs` with header `X-Admin-Key` and body
+  `{"invite_code": "PUNJAB-COLLEGE", "name": "Punjab College"}`. The response
+  contains the new school's access key (shown once).
+- Students' invite codes are checked on the "About you" step; unknown codes are rejected.
+
+### 4. Tests
+```bash
+cd backend
+python -m pytest -q        # needs models/weights/final_model.pkl
+```
+
+> **Model weights** are not in Git. Put `final_model.pkl` and `label_encoder.pkl` in
+> `models/weights/` at the repo root (or set `MODEL_DIR`). On Linux,
+> `pip install xgboost-cpu` avoids a ~300 MB GPU download.
+
 ---
 
 ## 🐳 Docker Deployment
 
-To launch the entire stack (PostgreSQL 16 + FastAPI + Next.js):
+To launch the entire stack (PostgreSQL 16 + FastAPI + Next.js), first create
+`pakcareer/.env` with at least `POSTGRES_PASSWORD=...` (see `.env.example`), then:
 ```bash
 docker compose up --build
 ```

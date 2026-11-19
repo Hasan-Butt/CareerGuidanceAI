@@ -43,11 +43,17 @@ class Org(Base):
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     org_type: Mapped[str] = mapped_column(String(32), nullable=False, default="school")
     # e.g. "school" | "university" | "counsellor"
+    # SHA-256 of the counsellor's secret dashboard key (see security.py)
+    key_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True, index=True)
 
     sessions: Mapped[list["Session"]] = relationship("Session", back_populates="org", lazy="dynamic")
 
     def to_dict(self) -> dict:
         return {"id": self.id, "invite_code": self.invite_code, "name": self.name, "org_type": self.org_type}
+
+    def public_dict(self) -> dict:
+        """What a student may see when checking an invite code."""
+        return {"invite_code": self.invite_code, "name": self.name}
 
 
 # ── Sessions ──────────────────────────────────────────────────────────────────
@@ -111,5 +117,20 @@ class Session(Base):
             "profile": self.profile,
             "student_meta": self.student_meta,
             "notes": self.notes,
+        }
+
+    def public_dict(self) -> dict:
+        """Result view for the student's own share link: no raw answers, no notes."""
+        return {
+            "session_id": self.id,
+            "created_at": self.created_at.isoformat(),
+            "age": self.age,
+            "education": self.education,
+            "holland_code": self.holland_code,
+            "top1_house": self.top1_house,
+            "top1_prob": self.top1_prob,
+            "top3": self.top3,
+            "all_results": self.all_results,
+            "profile": self.profile,
         }
 

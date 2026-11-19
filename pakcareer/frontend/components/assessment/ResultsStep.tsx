@@ -187,6 +187,31 @@ export function ResultsStep() {
             </p>
           </div>
 
+          {/* How sure is the model? (top-1 is right ~57% of the time, top-3 ~86%) */}
+          {top3.length > 1 && (
+            <div
+              className={`rounded-lg border px-4 py-3 text-sm leading-relaxed ${
+                primaryMatch.probability - top3[1].probability < 10
+                  ? "border-amber-300/50 bg-amber-400/10 text-amber-100"
+                  : "border-teal-400/30 bg-teal-400/10 text-teal-100"
+              }`}
+            >
+              {primaryMatch.probability - top3[1].probability < 10 ? (
+                <>
+                  <strong>Close call:</strong> {primaryMatch.house} and {top3[1].house} are almost
+                  tied ({primaryMatch.probability}% vs {top3[1].probability}%). Treat both as
+                  equally good options and compare them below.
+                </>
+              ) : (
+                <>
+                  <strong>Clear lead:</strong> {primaryMatch.house} is well ahead of your next match.
+                </>
+              )}{" "}
+              In testing, the student&apos;s actual field was among the top 3 for 86% of people,
+              so look at all three, not just #1.
+            </div>
+          )}
+
           {/* Action Row */}
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-teal-800/60">
             {effectiveSessionId && (

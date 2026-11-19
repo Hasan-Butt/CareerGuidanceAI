@@ -106,20 +106,36 @@ EDUCATION_OPTIONS = [
     "Undergraduate Year 2+",
 ]
 
+# Training codebook: 1 = less than high school, 2 = high school,
+# 3 = university degree, 4 = graduate degree.
 EDU_MAP = {
+    # Labels shown by the Next.js wizard (frontend/lib/questions.ts)
+    "Less than secondary school": 1,
+    "Some secondary school": 1,
+    "Completed secondary school": 2,
+    "Some university/college (no degree)": 2,
+    "University degree": 3,
+    "Graduate degree": 4,
+    # Labels from the original Streamlit app
     "Matric / O-Levels": 1,
     "Intermediate / A-Levels": 2,
     "Undergraduate Year 1": 3,
     "Undergraduate Year 2+": 4,
 }
 
+# Training codebook: 1 = rural, 2 = suburban, 3 = urban (town, city).
 URBAN_OPTIONS = {
+    "Rural": "rural",
+    "Suburban": "suburban",
+    "Urban": "urban",
     "Rural (village)": "rural",
     "Small town / suburban": "suburban",
     "City": "urban",
 }
 
 ENGNAT_OPTIONS = {
+    "Yes": "native",
+    "No": "non_native",
     "Yes — English is my native language": "native",
     "No — English is not my native language": "non_native",
 }

@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 # ── URL resolution ────────────────────────────────────────────────────────────
@@ -55,4 +55,11 @@ def init_db() -> None:
     """Create all tables (dev convenience; production uses Alembic migrations)."""
     from db import models  # noqa: F401 — import triggers table registration
     Base.metadata.create_all(bind=engine)
+
+    # Databases created before counsellor keys existed lack orgs.key_hash.
+    cols = {c["name"] for c in inspect(engine).get_columns("orgs")}
+    if "key_hash" not in cols:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE orgs ADD COLUMN key_hash VARCHAR(64)"))
+            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_orgs_key_hash ON orgs (key_hash)"))
 

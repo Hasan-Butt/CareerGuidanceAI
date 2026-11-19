@@ -1,11 +1,12 @@
 """Prediction router — POST /api/predict."""
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session as DBSession
 
 # Make backend root importable
@@ -17,7 +18,10 @@ from questions import (
     ENGNAT_OPTIONS,
     FAKE_WORD_KEYS,
     REAL_WORD_KEYS,
+    RIASEC_QUESTIONS,
+    TIPI_QUESTIONS,
     URBAN_OPTIONS,
+    VOCAB_WORDS,
 )
 from db.database import get_db
 from db.models import Org, Session as SessionModel
@@ -30,37 +34,94 @@ from services.predictor import (
 
 router = APIRouter(tags=["prediction"])
 
-# Load model once at startup
+# Load model once at startup. MODEL_DIR overrides the location (Docker mounts
+# the weights at /models/weights); otherwise use <repo>/models/weights.
+# (Path("/app").parents[1] does not exist, which crashed the Docker image.)
+_MODEL_DIR = Path(os.environ.get("MODEL_DIR") or Path(__file__).resolve().parents[3] / "models" / "weights")
 _model, _le = load_model(
-    model_path=str(_BACKEND.parents[1] / "models" / "weights" / "final_model.pkl"),
-    encoder_path=str(_BACKEND.parents[1] / "models" / "weights" / "label_encoder.pkl"),
+    model_path=str(_MODEL_DIR / "final_model.pkl"),
+    encoder_path=str(_MODEL_DIR / "label_encoder.pkl"),
 )
+
+_RIASEC_KEYS = set(RIASEC_QUESTIONS)
+_TIPI_KEYS = set(TIPI_QUESTIONS)
+_VOCAB_KEYS = set(VOCAB_WORDS)
 
 
 # ── Pydantic schemas ────────────────────────────────────────────────────────
 
 class AssessmentPayload(BaseModel):
-    """Full assessment submission from the wizard."""
+    """Full assessment submission from the wizard.
+
+    Every answer is checked here: out-of-range or missing answers used to be
+    silently replaced by defaults, so the model scored a different student.
+    """
 
     riasec: dict[str, int] = Field(
         ...,
-        description="48 RIASEC items (R1–C8), each rated 1–5.",
+        description="All 48 RIASEC items (R1–C8), each rated 1–5.",
         examples=[{"R1": 4, "R2": 2}],
     )
     tipi: dict[str, int] = Field(
         ...,
-        description="10 TIPI personality items (TIPI1–TIPI10), each rated 1–7.",
+        description="All 10 TIPI personality items (TIPI1–TIPI10), each rated 1–7.",
     )
     vocab_checked: dict[str, bool] = Field(
         ...,
-        description="16 VCL vocabulary items (VCL1–VCL16), True if box checked.",
+        description="VCL vocabulary items (VCL1–VCL16), True if box checked.",
     )
     age: int = Field(..., ge=13, le=80)
-    education: str = Field(..., description="Must match EDUCATION_OPTIONS key.")
+    education: str = Field(..., max_length=64, description="Must match an EDU_MAP key.")
     familysize: int = Field(..., ge=0, le=20)
-    urban_label: str = Field(..., description="Must match URBAN_OPTIONS key.")
-    engnat_label: str = Field(..., description="Must match ENGNAT_OPTIONS key.")
-    invite_code: str | None = Field(None, description="Org invite code for counsellor dashboard.")
+    urban_label: str = Field(..., max_length=64, description="Must match an URBAN_OPTIONS key.")
+    engnat_label: str = Field(..., max_length=64, description="Must match an ENGNAT_OPTIONS key.")
+    invite_code: str | None = Field(None, max_length=32, description="Org invite code for counsellor dashboard.")
+
+    @field_validator("riasec")
+    @classmethod
+    def _check_riasec(cls, v: dict[str, int]) -> dict[str, int]:
+        if set(v) != _RIASEC_KEYS:
+            raise ValueError("riasec must contain exactly the 48 items R1–C8")
+        if any(not 1 <= x <= 5 for x in v.values()):
+            raise ValueError("riasec answers must be between 1 and 5")
+        return v
+
+    @field_validator("tipi")
+    @classmethod
+    def _check_tipi(cls, v: dict[str, int]) -> dict[str, int]:
+        if set(v) != _TIPI_KEYS:
+            raise ValueError("tipi must contain exactly the 10 items TIPI1–TIPI10")
+        if any(not 1 <= x <= 7 for x in v.values()):
+            raise ValueError("tipi answers must be between 1 and 7")
+        return v
+
+    @field_validator("vocab_checked")
+    @classmethod
+    def _check_vocab(cls, v: dict[str, bool]) -> dict[str, bool]:
+        if not set(v) <= _VOCAB_KEYS:
+            raise ValueError("vocab_checked may only contain VCL1–VCL16")
+        return v
+
+    @field_validator("education")
+    @classmethod
+    def _check_education(cls, v: str) -> str:
+        if v not in EDU_MAP:
+            raise ValueError(f"unknown education option: {v!r}")
+        return v
+
+    @field_validator("urban_label")
+    @classmethod
+    def _check_urban(cls, v: str) -> str:
+        if v not in URBAN_OPTIONS:
+            raise ValueError(f"unknown area option: {v!r}")
+        return v
+
+    @field_validator("engnat_label")
+    @classmethod
+    def _check_engnat(cls, v: str) -> str:
+        if v not in ENGNAT_OPTIONS:
+            raise ValueError(f"unknown English-native option: {v!r}")
+        return v
 
 
 class HouseResult(BaseModel):
@@ -95,10 +156,18 @@ def run_prediction(payload: AssessmentPayload, db: DBSession = Depends(get_db)) 
     fake_claimed = sum(1 for k in FAKE_WORD_KEYS if payload.vocab_checked.get(k, False))
     fake_word_flag = 1 if fake_claimed == 1 else 0
 
-    # 2. Resolve coded values
-    urban_code = URBAN_OPTIONS.get(payload.urban_label, "unknown")
-    engnat_code = ENGNAT_OPTIONS.get(payload.engnat_label, "non_native")
-    edu_code = EDU_MAP.get(payload.education, 2)
+    # 2. Resolve coded values (already validated by AssessmentPayload)
+    urban_code = URBAN_OPTIONS[payload.urban_label]
+    engnat_code = ENGNAT_OPTIONS[payload.engnat_label]
+    edu_code = EDU_MAP[payload.education]
+
+    # Invite codes are created by an admin; reject unknown ones up front so a
+    # student is never told they are linked to a school when they are not.
+    org_code = None
+    if payload.invite_code and payload.invite_code.strip():
+        org_code = payload.invite_code.strip().upper()
+        if db.query(Org).filter_by(invite_code=org_code).first() is None:
+            raise HTTPException(status_code=400, detail=f"Unknown invite code: {org_code}")
 
     # 3. Feature engineering
     feature_row = build_feature_row(
@@ -118,7 +187,7 @@ def run_prediction(payload: AssessmentPayload, db: DBSession = Depends(get_db)) 
     profile = compute_profile_summary(payload.riasec, payload.tipi)
 
     # 5. Persist session to DB
-    session_id = _save_session(payload, all_results, profile, urban_code, engnat_code, db)
+    session_id = _save_session(payload, all_results, profile, urban_code, engnat_code, org_code, db)
 
     return PredictResponse(
         top3=all_results[:3],
@@ -134,6 +203,7 @@ def _save_session(
     profile: dict,
     urban_code: str,
     engnat_code: str,
+    org_code: str | None,
     db: DBSession,
 ) -> str:
     """Persist assessment result to DB and return session ID."""
@@ -141,24 +211,8 @@ def _save_session(
     all_res = [r if isinstance(r, dict) else r.model_dump() for r in all_results]
     prof = profile if isinstance(profile, dict) else profile.model_dump()
 
-    # Safely handle invite code / org linkage
-    valid_org_code = None
-    if payload.invite_code and payload.invite_code.strip():
-        code = payload.invite_code.strip().upper()
-        try:
-            org = db.query(Org).filter_by(invite_code=code).first()
-            if not org:
-                # Auto-register new institution code so custom cohorts work immediately
-                org = Org(invite_code=code, name=code, org_type="school")
-                db.add(org)
-                db.commit()
-            valid_org_code = code
-        except Exception:
-            db.rollback()
-            valid_org_code = None
-
     row = SessionModel(
-        org_code=valid_org_code,
+        org_code=org_code,
         age=payload.age,
         education=payload.education,
         familysize=payload.familysize,
@@ -176,18 +230,7 @@ def _save_session(
             "vocab_checked": payload.vocab_checked,
         },
     )
-
-    try:
-        db.add(row)
-        db.commit()
-        db.refresh(row)
-    except Exception:
-        db.rollback()
-        # Fallback without org_code to ensure student results are never blocked
-        row.org_code = None
-        db.add(row)
-        db.commit()
-        db.refresh(row)
-
+    db.add(row)
+    db.commit()
+    db.refresh(row)
     return row.id
-

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NavButtons } from "./NavButtons";
 import { EDUCATION_OPTIONS } from "@/lib/questions";
+import { fetchOrg } from "@/lib/api";
 
 export function AboutStep() {
   const router = useRouter();
@@ -15,19 +16,41 @@ export function AboutStep() {
 
   const [age, setAge] = useState<number>(about.age || 18);
   const [education, setEducation] = useState<string>(about.education || EDUCATION_OPTIONS[1]);
-  const [familysize, setFamilysize] = useState<number>(about.familysize || 5);
+  const [familysize, setFamilysize] = useState<number>(about.familysize ?? 5);
   const [urbanLabel, setUrbanLabel] = useState<string>(about.urban_label || "Urban");
   const [engnatLabel, setEngnatLabel] = useState<string>(about.engnat_label || "No");
   const [inviteCode, setInviteCode] = useState<string>(about.invite_code || "");
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [checkingCode, setCheckingCode] = useState(false);
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    const code = inviteCode.trim().toUpperCase();
+    // Check the invite code now, not after the student has answered 70 questions.
+    if (code) {
+      setCheckingCode(true);
+      setInviteError(null);
+      try {
+        await fetchOrg(code);
+      } catch (err) {
+        const status = (err as { status?: number }).status;
+        setInviteError(
+          status === 404
+            ? `"${code}" is not a valid invite code. Check it with your counsellor, or leave it empty.`
+            : "Could not check the invite code. Is the server running?"
+        );
+        return;
+      } finally {
+        setCheckingCode(false);
+      }
+    }
     setAbout({
       age,
       education,
       familysize,
       urban_label: urbanLabel,
       engnat_label: engnatLabel,
-      invite_code: inviteCode.trim() ? inviteCode.trim().toUpperCase() : undefined,
+      // "" (not undefined) so clearing a code from the landing page sticks
+      invite_code: code,
     });
     setStep("riasec");
     router.push("/assessment/riasec");
@@ -163,14 +186,20 @@ export function AboutStep() {
               id="invite"
               placeholder="e.g. FAST-LAHORE"
               value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value)}
+              onChange={(e) => {
+                setInviteCode(e.target.value);
+                setInviteError(null);
+              }}
               className="uppercase font-mono"
+              aria-invalid={!!inviteError}
             />
+            {inviteError && <p className="text-sm text-red-600">{inviteError}</p>}
           </div>
 
           <NavButtons
             onBack={handleBack}
             onNext={handleNext}
+            loading={checkingCode}
             nextLabel="Continue to Interests"
           />
         </CardContent>

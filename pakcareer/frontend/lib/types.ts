@@ -48,12 +48,13 @@ export interface SessionRecord {
   top3: HouseResult[];
   all_results: HouseResult[];
   profile: AssessmentProfile;
-  student_meta: {
+  // Only present for the student's own counsellor (not on public share links)
+  student_meta?: {
     riasec: Record<string, number>;
     tipi: Record<string, number>;
     vocab_checked: Record<string, boolean>;
   };
-  notes: string | null;
+  notes?: string | null;
 }
 
 export interface OrgRecord {

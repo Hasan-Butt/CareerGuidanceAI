@@ -22,12 +22,11 @@ const HOUSE_COLORS: Record<string, string> = {
 export default function DashboardAnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [orgFilter, setOrgFilter] = useState<string>("");
 
-  const loadAnalytics = async (org?: string) => {
+  const loadAnalytics = async () => {
     setLoading(true);
     try {
-      const res = await fetchAnalytics(org || undefined);
+      const res = await fetchAnalytics();
       setData(res);
     } catch (err) {
       console.error("Failed to fetch analytics:", err);
@@ -37,8 +36,8 @@ export default function DashboardAnalyticsPage() {
   };
 
   useEffect(() => {
-    loadAnalytics(orgFilter);
-  }, [orgFilter]);
+    loadAnalytics();
+  }, []);
 
   const houseData = data?.house_distribution
     ? Object.entries(data.house_distribution).map(([name, count]) => ({
@@ -71,20 +70,10 @@ export default function DashboardAnalyticsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <select
-              value={orgFilter}
-              onChange={(e) => setOrgFilter(e.target.value)}
-              className="h-10 px-3 text-xs sm:text-sm font-semibold rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0f766e]"
-            >
-              <option value="">All Cohorts (Aggregate)</option>
-              <option value="FAST-LAHORE">FAST NUCES Lahore</option>
-              <option value="COUNSEL-DEMO">Demo Counsellor Account</option>
-              <option value="LGS-DEMO">Lahore Grammar School</option>
-            </select>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => loadAnalytics(orgFilter)}
+              onClick={() => loadAnalytics()}
               className="text-xs"
             >
               Refresh

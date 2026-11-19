@@ -35,3 +35,10 @@ report/*.fdb_latexmk
 .vscode/
 .idea/
 .DS_Store
+
+# app database (contains student answers) and local secrets
+*.db
+*.db-shm
+*.db-wal
+pakcareer/demo_keys.local.txt
+.env

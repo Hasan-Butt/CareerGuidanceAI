@@ -21,67 +21,69 @@ export const DOMAIN_DESCRIPTIONS: Record<string, string> = {
   C: "Organising, data, and following procedures",
 };
 
-// 48 RIASEC questions (grouped by domain, 8 each)
+// 48 RIASEC questions (grouped by domain, 8 each).
+// EXACT Open Psychometrics wording the model was trained on — copied from
+// backend/questions.py. Do not reword: the model reads each item as a feature.
 export const RIASEC_QUESTIONS: Record<string, string[]> = {
   R: [
-    "Build or repair things around the house",
-    "Work on engines or machines",
-    "Use hand tools (e.g. hammer, drill, wrench)",
-    "Assemble or repair electronic devices",
-    "Operate farm or construction equipment",
-    "Read a blueprint or technical diagram",
-    "Do landscaping or garden work",
-    "Work with wood or metal to build objects",
+    "Test the quality of parts before shipment",
+    "Lay brick or tile",
+    "Work on an offshore oil-drilling rig",
+    "Assemble electronic parts",
+    "Operate a grinding machine in a factory",
+    "Fix a broken faucet",
+    "Assemble products in a factory",
+    "Install flooring in houses",
   ],
   I: [
-    "Study how the human body works",
-    "Conduct scientific experiments",
-    "Read scientific journals or research papers",
-    "Analyse data to find patterns",
-    "Develop theories to explain observations",
-    "Use a microscope or laboratory equipment",
-    "Solve complex maths or logic puzzles",
-    "Research a topic in depth using multiple sources",
+    "Study the structure of the human body",
+    "Study animal behavior",
+    "Do research on plants or animals",
+    "Develop a new medical treatment or procedure",
+    "Conduct biological research",
+    "Study whales and other types of marine life",
+    "Work in a biology lab",
+    "Make a map of the bottom of an ocean",
   ],
   A: [
-    "Sketch, draw, or paint for fun",
-    "Write short stories, poetry, or creative content",
+    "Conduct a musical choir",
+    "Direct a play",
+    "Design artwork for magazines",
+    "Write a song",
+    "Write books or plays",
     "Play a musical instrument",
-    "Act in plays or improvise scenes",
-    "Design graphics, logos, or layouts",
-    "Decorate rooms or design interior spaces",
-    "Create sculptures or craft objects",
-    "Choreograph or perform dance routines",
+    "Perform stunts for a movie or television show",
+    "Design sets for plays",
   ],
   S: [
-    "Volunteer at a charity or community centre",
-    "Tutor or teach others a skill",
-    "Counsel or listen to friends with problems",
-    "Plan group activities or social events",
-    "Work as part of a team on shared goals",
-    "Care for children or elderly people",
-    "Mediate or resolve conflicts between people",
-    "Advocate for social justice or community issues",
+    "Give career guidance to people",
+    "Do volunteer work at a non-profit organization",
+    "Help people who have problems with drugs or alcohol",
+    "Teach an individual an exercise routine",
+    "Help people with family-related problems",
+    "Supervise the activities of children at a camp",
+    "Teach children how to read",
+    "Help elderly people with their daily activities",
   ],
   E: [
-    "Lead a team or club at school",
-    "Negotiate or debate in competitions",
-    "Start a small business or sell products",
-    "Recruit or motivate other people",
-    "Give speeches or presentations",
-    "Make strategic decisions in games or simulations",
-    "Manage a budget or fundraise for a project",
-    "Influence others to adopt your ideas",
+    "Sell restaurant franchises to individuals",
+    "Sell merchandise at a department store",
+    "Manage the operations of a hotel",
+    "Operate a beauty salon or barber shop",
+    "Manage a department within a large company",
+    "Manage a clothing store",
+    "Sell houses",
+    "Run a toy store",
   ],
   C: [
-    "Keep detailed records or spreadsheets",
-    "File documents and maintain organised systems",
-    "Use accounting or billing software",
-    "Follow step-by-step instructions precisely",
-    "Perform data entry or statistical computing",
-    "Proofread written materials for errors",
-    "Schedule and plan meetings or tasks",
-    "Manage inventories or databases",
+    "Generate the monthly payroll checks for an office",
+    "Inventory supplies using a hand-held computer",
+    "Use a computer program to generate customer bills",
+    "Maintain employee records",
+    "Compute and record statistical and other numerical data",
+    "Operate a calculator",
+    "Handle customers' bank transactions",
+    "Keep shipping and receiving records",
   ],
 };
 
@@ -116,18 +118,14 @@ export const TIPI_SCALE = [
   "Agree strongly",
 ];
 
-// Vocabulary (16 items — do NOT indicate which are fake)
-export const VCL_WORDS: string[] = [
-  "boat",   "incoherent", "pallid",    "mural",
-  "flommy", "caress",     "clauver",   "decide",
-  "fatuous","piquant",    "tectonic",  "herbal",
-  "quenzy", "glitter",    "staunch",   "glib",
-];
+// Vocabulary (16 items — do NOT indicate which are fake). Same words and
+// order as training (backend/questions.py VOCAB_WORDS).
+export const VCL_WORDS: string[] = ["boat", "incoherent", "pallid", "robot", "audible", "cuivocal", "paucity", "epistemology", "florted", "decide", "pastiche", "verdid", "abysmal", "lucid", "betray", "funny"];
 
 export const VCL_KEYS = Array.from({ length: 16 }, (_, i) => `VCL${i + 1}`);
 
-// Fake words (never shown to student, used server-side only)
-export const FAKE_WORD_KEYS = ["VCL5", "VCL7", "VCL13"]; // flommy, clauver, quenzy
+// Fake words (never shown as such to the student; scored server-side)
+export const FAKE_WORD_KEYS = ["VCL6", "VCL9", "VCL12"]; // cuivocal, florted, verdid
 
 // Demographics
 export const EDUCATION_OPTIONS = [

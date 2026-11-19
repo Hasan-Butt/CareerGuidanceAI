@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
+import { DashboardGate } from "@/components/dashboard/DashboardGate";
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck } from "lucide-react";
 
@@ -32,17 +33,9 @@ export default function DashboardLayout({
         {/* Navigation wrapped in Suspense */}
         <DashboardNav />
 
-        {/* Demo Org Badge */}
-        <div className="p-4 border-t border-teal-800/40 text-xs">
-          <div className="flex items-center gap-2 text-teal-200 mb-1">
-            <ShieldCheck className="w-4 h-4 text-teal-400" />
-            <span className="font-bold">Active Institutions</span>
-          </div>
-          <div className="flex flex-wrap gap-1 pt-1">
-            <Badge variant="secondary" className="text-[10px] bg-teal-900/80 text-teal-200 border-teal-700">FAST-LAHORE</Badge>
-            <Badge variant="secondary" className="text-[10px] bg-teal-900/80 text-teal-200 border-teal-700">LGS-DEMO</Badge>
-            <Badge variant="secondary" className="text-[10px] bg-teal-900/80 text-teal-200 border-teal-700">COUNSEL-DEMO</Badge>
-          </div>
+        <div className="p-4 border-t border-teal-800/40 text-xs text-teal-200 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-teal-400" />
+          <span>Only your institution&apos;s students are shown.</span>
         </div>
       </aside>
 
@@ -54,14 +47,14 @@ export default function DashboardLayout({
           </h1>
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="text-xs">
-              FastAPI + PostgreSQL
+              FastAPI + SQL
             </Badge>
           </div>
         </header>
 
         <div className="p-6 flex-1 overflow-auto">
           <Suspense fallback={<div className="py-20 text-center text-slate-500">Loading dashboard...</div>}>
-            {children}
+            <DashboardGate>{children}</DashboardGate>
           </Suspense>
         </div>
       </main>

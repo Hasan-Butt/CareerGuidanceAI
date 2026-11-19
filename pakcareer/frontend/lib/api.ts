@@ -7,6 +7,7 @@ import type {
   SessionRecord,
   SessionsResponse,
 } from "./types";
+import { getOrgKey } from "./auth";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -15,10 +16,15 @@ async function apiFetch<T>(
   init?: RequestInit
 ): Promise<T> {
   const url = `${BASE}${path}`;
+  const orgKey = getOrgKey();
   try {
     const res = await fetch(url, {
-      headers: { "Content-Type": "application/json", ...init?.headers },
       ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(orgKey ? { "X-Org-Key": orgKey } : {}),
+        ...init?.headers,
+      },
     });
     if (!res.ok) {
       let detail = res.statusText;
@@ -28,7 +34,9 @@ async function apiFetch<T>(
       } catch {
         detail = await res.text();
       }
-      throw new Error(`API ${path} → ${res.status}: ${detail}`);
+      const e = new Error(`API ${path} → ${res.status}: ${detail}`) as Error & { status?: number };
+      e.status = res.status;
+      throw e;
     }
     return res.json() as Promise<T>;
   } catch (err: unknown) {
@@ -51,13 +59,13 @@ export function fetchPredict(payload: AssessmentPayload): Promise<PredictRespons
 
 // ── Sessions ──────────────────────────────────────────────────────────────────
 
+// Dashboard calls send the counsellor's X-Org-Key; the server returns only
+// that organisation's students.
 export function fetchSessions(params?: {
-  org_code?: string;
   limit?: number;
   offset?: number;
 }): Promise<SessionsResponse> {
   const qs = new URLSearchParams();
-  if (params?.org_code) qs.set("org_code", params.org_code);
   if (params?.limit)    qs.set("limit", String(params.limit));
   if (params?.offset)   qs.set("offset", String(params.offset));
   return apiFetch<SessionsResponse>(`/api/sessions?${qs}`);
@@ -67,9 +75,8 @@ export function fetchSession(id: string): Promise<SessionRecord> {
   return apiFetch<SessionRecord>(`/api/sessions/${id}`);
 }
 
-export function fetchAnalytics(org_code?: string): Promise<AnalyticsData> {
-  const qs = org_code ? `?org_code=${encodeURIComponent(org_code)}` : "";
-  return apiFetch<AnalyticsData>(`/api/sessions/analytics${qs}`);
+export function fetchAnalytics(): Promise<AnalyticsData> {
+  return apiFetch<AnalyticsData>("/api/sessions/analytics");
 }
 
 export function patchNotes(id: string, notes: string): Promise<{ session_id: string; notes: string }> {
@@ -85,7 +92,13 @@ export function fetchPdfUrl(id: string): string {
 
 // ── Orgs ──────────────────────────────────────────────────────────────────────
 
-export function fetchOrg(invite_code: string): Promise<OrgRecord> {
-  return apiFetch<OrgRecord>(`/api/orgs/${invite_code}`);
+/** Public invite-code check used by the assessment. */
+export function fetchOrg(invite_code: string): Promise<Pick<OrgRecord, "invite_code" | "name">> {
+  return apiFetch(`/api/orgs/${encodeURIComponent(invite_code)}`);
+}
+
+/** Dashboard login: which organisation does the stored key belong to? */
+export function fetchMyOrg(key?: string): Promise<OrgRecord> {
+  return apiFetch<OrgRecord>("/api/orgs/me", key ? { headers: { "X-Org-Key": key } } : undefined);
 }
 
