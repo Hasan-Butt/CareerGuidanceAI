@@ -15,7 +15,9 @@ gradient-boosted trees are empirically superior on tabular classification
 tasks of this scale~\cite{grinsztajn2022tree}. XGBoost was preferred over
 sklearn's \texttt{GradientBoostingClassifier} because its histogram-based
 split finding reduces training time by an order of magnitude on 65\,000
-rows (the final model trains in under a minute).
+rows (the final model trains in under a minute). The trained model is loaded
+once at API startup via \texttt{joblib} and held in memory; model inference
+takes a median of 9\,ms per request on a laptop CPU (Phase~5).
 
 \subsection{Architecture Definition}
 
@@ -52,7 +54,7 @@ probability vectors. Figure~\ref{fig:arch} shows the end-to-end pipeline.
 \paragraph{Class imbalance.} The classes are imbalanced 14:1 (Arts vs.\ Law).
 We trained two variants: an \emph{unweighted} model and a \emph{class-balanced}
 model whose samples are weighted with
-\texttt{compute\_sample\_weight('balanced')}. Balancing raises macro-F1 and
+\texttt{compute\_\allowbreak sample\_\allowbreak weight('balanced')}. Balancing raises macro-F1 and
 minority-class recall but lowers top-$k$ accuracy (Table~\ref{tab:results}).
 Because the application presents a ranked top-3 list, we select the
 \textbf{unweighted} model as the final model and report the balanced variant
@@ -356,6 +358,8 @@ applied if the gaps persist.
 %  CONTRIBUTION TABLE
 % ============================================================
 
+\input{phase5_sections}
+
 \section{Team Contribution}
 
 Table~\ref{tab:contrib} maps each Git commit author to the modules they
@@ -373,9 +377,11 @@ committed, taken from the repository history.
 Muhammad Hasan Butt (24L-3022)
   & \texttt{data\_scripts/clean\_pakistan.py} & ILO, World Bank and Rozee.pk cleaning \\
   & \texttt{data\_scripts/build\_features.py} & Feature engineering, scaling; added 58 raw item columns \\
-  & \texttt{data\_scripts/evaluate\_supplementary.py}, \texttt{baseline\_models.py} & Supplementary-dataset test, Phase~2 baselines \\
+  & \texttt{data\_scripts/evaluate\_\allowbreak supplementary.py}, \texttt{baseline\_models.py} & Supplementary-dataset test, Phase~2 baselines \\
   & \texttt{src/models/model.py}, \texttt{src/models/train.py} & Model architectures, XGBoost training, loss curves \\
   & \texttt{report/phase3\_4\_sections.tex} & Phase 3--4 report sections \\
+  & \texttt{app/} & Streamlit prototype (predictor, questions, PDF report) \\
+  & \texttt{pakcareer/} & Next.js + FastAPI application, dashboard, Docker setup \\
 \midrule
 Kabeer Ahmed Shahzeb (24L-3087)
   & \texttt{README.md}, \texttt{requirements.txt}, \texttt{.gitignore} & Project setup \\
@@ -384,6 +390,9 @@ Kabeer Ahmed Shahzeb (24L-3087)
   & \texttt{src/evaluation/evaluate.py} & Top-$k$ accuracy, AUC-ROC, confusion matrix \\
   & \texttt{src/models/train.py} (fix) & Restored shared helpers; excluded sensitive columns \\
   & \texttt{report/main.tex} & Report integration and this table \\
+  & \texttt{pakcareer/backend/} (security, tests) & Counsellor access keys, input validation, API tests \\
+  & \texttt{pakcareer/frontend/} (fixes) & Training item wording, invite-code check, dashboard sign-in \\
+  & \texttt{report/phase5\_sections.tex} & Phase 5 report section \\
 \midrule
 Muhammad Moosa Khan Rokhri (24L-3070)
   & \texttt{survey/} & Pakistani student survey specification \\

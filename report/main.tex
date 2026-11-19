@@ -20,12 +20,12 @@
 
 \title{\textbf{PakCareer AI}\\[2pt]
 \large Data-driven degree guidance for Pakistani college graduates\\[2pt]
-\normalsize Deliverables 1--2: Data Foundations, Model Implementation \& Evaluation (Track A)}
+\normalsize Deliverables 1--3: Data Foundations, Model, Evaluation \& Deployment (Track A)}
 \author{
 Kabeer Ahmed Shahzeb (24L-3087) \and Muhammad Hasan Butt (24L-3022) \and Muhammad Moosa Khan Rokhri (24L-3070)\\[4pt]
 \small FAST School of Computing, National University of Computer and Emerging Sciences, Lahore
 }
-\date{October 2026}
+\date{November 2026}
 
 \begin{document}
 \maketitle
@@ -36,15 +36,18 @@ their whole career, and the choice is very often made by their parents, who defa
 of ``safe'' professions. PakCareer AI sorts a student into one of seven degree families
 (``houses'') from their interests and personality, and backs the recommendation with
 Pakistan-specific labour-market statistics the student can show their family. This report covers
-Phase~1 (problem definition) and Phase~2 (data acquisition and preprocessing). We collected five
+Phase~1 (problem definition), Phase~2 (data acquisition and preprocessing), Phases~3--4 (model
+implementation and evaluation) and Phase~5 (deployment). We collected five
 sources: 145,828 RIASEC interest-test responses (training data), the O*NET 31.0 occupation
 database, Pakistan Labour Force Survey indicators from ILOSTAT, World Bank indicators, and
 10,999 live Pakistani job postings scraped from Rozee.pk. We also evaluated ten supplementary
 Kaggle career datasets and excluded all of them from training: six have random labels, one leaks
 the target and three are too small or unlabelled. After cleaning, the modelling table holds
-81,256 labelled respondents with 30 engineered, scaled and encoded features. A preliminary
-gradient-boosting baseline places the student's actual field among its top three houses
-86\% of the time.
+81,256 labelled respondents with 30 engineered, scaled and encoded features. The final XGBoost
+model (500 trees, 88 features) achieves 57.1\% top-1 and 86.4\% top-3 accuracy with macro-F1
+0.358 on 16,252 held-out students. The model is deployed as a REST API (FastAPI) with a Next.js
+frontend, an institutional counsellor dashboard, and a downloadable parents' PDF report backed by
+ILOSTAT earnings and Rozee.pk job-demand data.
 \end{abstract}
 
 % ------------------------------------------------------------------
@@ -512,12 +515,34 @@ Gradient boosting, 30 features & 53.0\% & 73.0\% & 83.4\% & 0.28 \\
       requested, would allow degree-level figures.
 \item \textbf{Salaries on Rozee.pk} are hidden behind a login for most postings, so salary comes
       only from ILO data.
+\item \textbf{Domain shift mitigation (partial).} The deployed system stores each assessment
+      with demographics and raw item responses. Sessions from Pakistani students could seed a
+      future fine-tuning dataset once enough accumulate, addressing the small Pakistani sample
+      in the bias check (only 62 Pakistani students in the test set, Section~\ref{sec:bias}).
+      Reusing answers for training would first need the student's explicit consent, which the
+      wizard does not yet ask for.
 \end{itemize}
 
 \section{Next Steps}
-Deploy the final XGBoost model behind an API with a hosted web front end that shows each student
-their top-3 houses with probabilities and the Pakistan statistics report. Add the task-based career
-simulations as new features, incorporate the Pakistani survey responses, and repeat the bias check.
+\subsection*{Completed}
+The XGBoost model is deployed behind a FastAPI REST API with a Next.js frontend. The six-step
+assessment wizard, institutional counsellor dashboard, cohort analytics and downloadable parents'
+PDF report are working end to end (Phase~5, Section~\ref{sec:phase5}).
+
+\subsection*{Remaining}
+\begin{enumerate}
+  \item \textbf{Task-based career simulations:} behavioural features beyond self-report
+        Likert scales, targeting the minority-class recall failures in Table~\ref{tab:recall}
+        (Law 0.9\%, CS\,\&\,IT 12.0\%).
+  \item \textbf{Pakistani survey incorporation:} once the Google Form has at least 500
+        responses, retrain with Pakistani rows up-weighted and repeat the bias check
+        (Section~\ref{sec:bias}).
+  \item \textbf{Class-balanced model option:} offer the balanced variant (macro-F1 0.382,
+        Law recall 17.6\%) as a counsellor setting for institutions that value finding
+        minority-house students over top-1 accuracy.
+  \item \textbf{Occupation-level salary data:} replace ILO sector averages with PBS microdata
+        once access is granted, resolving the proxy-statistics limitation above.
+\end{enumerate}
 
 \section*{Repository}
 \begin{tabular}{@{}ll@{}}
@@ -529,6 +554,11 @@ simulations as new features, incorporate the Pakistani survey responses, and rep
 \texttt{data\_scripts/eda.py} & all figures in this report \\
 \texttt{data\_scripts/evaluate\_supplementary.py} & learnability test of the Kaggle datasets (Table~\ref{tab:excluded}) \\
 \texttt{data\_scripts/baseline\_models.py} & preliminary baselines (Table~\ref{tab:baseline}) \\
+\texttt{src/models/train.py} & final model training \\
+\texttt{src/evaluation/evaluate.py} & final model evaluation \\
+\texttt{pakcareer/backend/} & FastAPI service, database models, API tests \\
+\texttt{pakcareer/frontend/} & Next.js assessment wizard and counsellor dashboard \\
+\texttt{pakcareer/docker-compose.yml} & PostgreSQL + backend + frontend stack \\
 \end{tabular}
 
 \begin{thebibliography}{9}\small

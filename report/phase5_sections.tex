@@ -1,0 +1,178 @@
+% ============================================================
+%  PHASE 5: SYSTEM ARCHITECTURE & DEPLOYMENT
+% ============================================================
+
+\section{Phase 5: System Architecture \& Deployment}\label{sec:phase5}
+
+\subsection{Architecture Overview}
+
+The XGBoost classifier is served by a three-tier web application
+(\texttt{pakcareer/} in the repository), which replaces the earlier
+single-file Streamlit prototype (\texttt{app/}):
+
+\begin{itemize}
+  \item \textbf{Frontend:} Next.js~16 (React~19, App Router) with Tailwind
+        CSS~v4, Recharts for charts and Zustand for wizard state.
+  \item \textbf{Backend:} FastAPI (Python) exposing a REST API. The
+        prototype's \texttt{predictor.py} (feature construction and
+        inference) and \texttt{report\_pdf.py} (parents' report) are reused
+        unchanged; \texttt{questions.py} is reused with label mappings added
+        for the new frontend.
+  \item \textbf{Database:} SQLAlchemy ORM. Local development uses SQLite
+        with no setup; the Docker stack uses PostgreSQL~16. Session results
+        are stored in JSON columns (JSONB on PostgreSQL), which the cohort
+        analytics endpoint aggregates.
+\end{itemize}
+
+The model and label encoder are loaded once when the API starts. On a
+laptop CPU, model inference takes a median of 9\,ms per student, and a
+complete \texttt{POST /api/predict} request (feature construction,
+inference and database write) takes a median of 16\,ms
+(200 and 100 timed calls respectively).
+
+\subsection{API Endpoints}
+
+\begin{table}[h]
+\centering
+\small
+\caption{FastAPI REST endpoints. ``Key'' means the request must carry the
+         institution's access key (Section~\ref{sec:security}).}
+\label{tab:api}
+\begin{tabular}{llll}
+\toprule
+\textbf{Method} & \textbf{Route} & \textbf{Access} & \textbf{Function} \\
+\midrule
+POST  & \texttt{/api/predict}                 & Public & Validate answers, run inference, store session \\
+GET   & \texttt{/api/sessions}                & Key    & List the institution's sessions \\
+GET   & \texttt{/api/sessions/analytics}      & Key    & Cohort aggregate statistics \\
+GET   & \texttt{/api/sessions/\{id\}}         & Link / Key & Results only; full record with key \\
+PATCH & \texttt{/api/sessions/\{id\}/notes}   & Key    & Update counsellor notes \\
+GET   & \texttt{/api/sessions/\{id\}/pdf}     & Link   & Download the parents' PDF report \\
+GET   & \texttt{/api/orgs/\{code\}}           & Public & Check an invite code \\
+GET   & \texttt{/api/orgs/me}                 & Key    & Dashboard sign-in check \\
+POST  & \texttt{/api/orgs}                    & Admin  & Register an institution, issue its key \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Student Assessment Wizard}
+
+The six-step wizard replicates the Streamlit flow as typed React components.
+Answers are kept in the browser's session storage, so a page refresh does
+not lose progress.
+
+\begin{enumerate}
+  \item \textbf{Landing:} product overview and optional invite-code entry.
+  \item \textbf{About:} age, education, family size, urban/rural and English
+        nativeness. The invite code is checked here, so a student is not told
+        they are linked to a school when the code is wrong.
+  \item \textbf{RIASEC:} 48 items across 6 domains, one domain per page; the
+        next domain unlocks only when the current one is complete.
+  \item \textbf{TIPI:} 10 Big Five items on a 1--7 scale.
+  \item \textbf{Vocabulary:} the 16-word checklist, including the three
+        non-words used as a validity check.
+  \item \textbf{Results:} top-3 houses, the full 7-house probability chart,
+        the psychometric profile and a Pakistan careers and market tab.
+\end{enumerate}
+
+Each step is a Next.js dynamic route (\texttt{/assessment/[step]}). The
+browser sends the raw answers in one \texttt{POST /api/predict} call, and
+the server builds the 88-feature vector with the same transformations and
+fitted scaling parameters as training. We checked this on 2\,000 real
+respondents: the 30 engineered features computed by the API matched the
+training pipeline's values exactly.
+
+Because the 58 raw item answers are themselves model features, the wizard
+must show the exact item wording of the training data. Testing found that
+an early version of the frontend used reworded RIASEC items and a different
+vocabulary list, with the non-words in different positions from those
+scored by the backend. Both were replaced with the original items before
+this submission.
+
+\paragraph{Communicating uncertainty.} The model's first choice is right
+57\% of the time and its top three 86\% of the time
+(Table~\ref{tab:results}). The results page therefore labels each result as
+a \emph{clear lead} or a \emph{close call} (top two within 10 percentage
+points) and tells students to consider all three houses.
+
+\subsection{Institutional Counsellor Dashboard}
+
+The counsellor dashboard at \texttt{/dashboard} provides:
+\begin{itemize}
+  \item \textbf{Sessions:} KPI cards (number of assessments, most common
+        recommended house, average age) and a searchable table of the
+        institution's students.
+  \item \textbf{Session detail:} each student's psychometric profile and
+        predictions, private counsellor notes, and the PDF report.
+  \item \textbf{Analytics:} house distribution, the most frequent Holland
+        codes and the urban/rural split, from
+        \texttt{/api/sessions/analytics}.
+\end{itemize}
+Three demo institutions are created on first start: \texttt{FAST-LAHORE},
+\texttt{COUNSEL-DEMO} and \texttt{LGS-DEMO}.
+
+\subsection{Security and Privacy}\label{sec:security}
+
+The system stores minors' answers, so access is restricted as follows:
+\begin{itemize}
+  \item \textbf{Counsellor access keys.} Each institution has a secret key;
+        only its SHA-256 hash is stored. Dashboard requests send the key in
+        an \texttt{X-Org-Key} header, and the API returns only students who
+        used that institution's invite code. A counsellor cannot read or
+        edit another institution's sessions.
+  \item \textbf{Share links.} A student's result link uses the session's
+        random UUID and returns only the results, never the raw answers or
+        counsellor notes.
+  \item \textbf{Institutions.} Invite codes can only be created with an
+        operator key; unknown codes are rejected.
+  \item \textbf{Input validation.} The API rejects missing items,
+        out-of-range answers and unknown demographic options instead of
+        silently replacing them with defaults.
+  \item \textbf{Cross-origin access.} Only the configured frontend origin
+        may call the API from a browser.
+\end{itemize}
+
+\subsection{PDF Report Generation}
+
+The \texttt{report\_pdf.py} module (FPDF2) is exposed as a download
+endpoint. The report contains the student snapshot, the top-3 houses with
+example Pakistani degrees and Rozee.pk posting counts, ILO earnings and
+unemployment context, and the full 7-house probability table, written for
+parents.
+
+\subsection{Testing}
+
+\begin{itemize}
+  \item \textbf{API tests:} 15 automated tests (\texttt{pytest}) cover
+        prediction output, input validation, invite codes, access-key
+        scoping, share-link privacy, PDF generation and CORS.
+  \item \textbf{Frontend:} the production build (\texttt{npm run build})
+        compiles all 12 routes without errors.
+  \item \textbf{Dependencies:} \texttt{npm audit} and \texttt{pip-audit}
+        report no known vulnerabilities.
+  \item \textbf{End to end:} the full assessment was completed in a browser,
+        including an invalid invite code, the PDF download and the
+        counsellor dashboard.
+\end{itemize}
+
+\subsection{Containerisation \& Deployment}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Docker Compose services and their intended hosting.}
+\label{tab:deploy}
+\begin{tabular}{lll}
+\toprule
+\textbf{Service} & \textbf{Image} & \textbf{Intended host} \\
+\midrule
+PostgreSQL 16    & \texttt{postgres:16-alpine}            & Railway managed database \\
+FastAPI backend  & \texttt{python:3.11-slim} + XGBoost    & Railway web service \\
+Next.js frontend & \texttt{node:22-alpine}, multi-stage   & Vercel \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A \texttt{docker-compose.yml} runs all three services locally. The database
+password is read from an untracked \texttt{.env} file and the database port
+is not published outside the Docker network.
