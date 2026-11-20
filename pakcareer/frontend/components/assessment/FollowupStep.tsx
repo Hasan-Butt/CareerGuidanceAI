@@ -154,6 +154,15 @@ export function FollowupStep() {
             Preparing 3–5 targeted questions to fine-tune your degree match recommendations...
           </p>
         </div>
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={handleSkipOrProceedWithoutAI}
+            className="text-xs font-bold text-white/90 hover:text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 transition cursor-pointer"
+          >
+            Skip to Instant Results ↗
+          </button>
+        </div>
       </div>
     );
   }
@@ -174,6 +183,15 @@ export function FollowupStep() {
           <p className="text-xs font-medium text-white/90 max-w-xs mx-auto">
             {stage2Status || "Enriching your profile with real-time industry insights..."}
           </p>
+        </div>
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={handleSkipOrProceedWithoutAI}
+            className="text-xs font-bold text-white/90 hover:text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 transition cursor-pointer"
+          >
+            Skip Directly to Results ↗
+          </button>
         </div>
       </div>
     );

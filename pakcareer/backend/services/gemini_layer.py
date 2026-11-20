@@ -8,6 +8,7 @@ import os
 import json
 import re
 import logging
+import time
 
 import google.generativeai as genai
 
@@ -23,6 +24,13 @@ FLASH_MODELS = [
     "gemini-3.5-flash",
     "gemini-flash-latest",
 ]
+
+_quota_cooldown_until: float = 0.0
+
+
+def _is_quota_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return "429" in msg or "quota" in msg or "resourceexhausted" in msg
 
 # ── STAGE 1: Follow-up Question Generation ──────────────────────────────────
 
@@ -80,7 +88,8 @@ def generate_followup_questions(
     Returns:
         dict with "questions" key containing list of question objects
     """
-    if not _API_KEY:
+    global _quota_cooldown_until
+    if not _API_KEY or time.time() < _quota_cooldown_until:
         return _fallback_questions()
 
     user_content = f"""
@@ -108,16 +117,20 @@ Return ONLY the JSON object as specified.
             )
             response = model.generate_content(
                 user_content,
-                request_options={"timeout": 30},
+                request_options={"timeout": 6},
             )
             result = json.loads(response.text)
             if "questions" in result and isinstance(result["questions"], list):
                 return result
         except Exception as exc:
             log.warning("Gemini Stage 1 error with %s: %s", model_name, exc)
+            if _is_quota_error(exc):
+                _quota_cooldown_until = time.time() + 300
+                log.info("Gemini quota limit active; fast-failing to instant diagnostic questions.")
+                break
             continue
 
-    log.error("All Gemini Stage 1 model attempts failed; using fallback questions")
+    log.info("Using smart diagnostic fallback questions for Stage 1")
     return _fallback_questions()
 
 
@@ -226,7 +239,8 @@ def validate_and_enrich(
     Returns:
         dict with adjusted_ranking, market_data, narratives, validation_summary, data_sources
     """
-    if not _API_KEY:
+    global _quota_cooldown_until
+    if not _API_KEY or time.time() < _quota_cooldown_until:
         return _fallback_enrichment(xgb_ranking)
 
     user_content = f"""
@@ -261,7 +275,7 @@ Please:
             )
             response = model.generate_content(
                 user_content,
-                request_options={"timeout": 30},
+                request_options={"timeout": 8},
             )
             raw_text = response.text
 
@@ -275,9 +289,13 @@ Please:
                 return result
         except Exception as exc:
             log.warning("Gemini Stage 2 error with %s: %s", model_name, exc)
+            if _is_quota_error(exc):
+                _quota_cooldown_until = time.time() + 300
+                log.info("Gemini quota limit active; fast-failing to verified market intelligence.")
+                break
             continue
 
-    log.error("All Gemini Stage 2 model attempts failed; using fallback enrichment")
+    log.info("Using verified market fallback intelligence for Stage 2")
     return _fallback_enrichment(xgb_ranking)
 
 
