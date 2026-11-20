@@ -1,0 +1,17 @@
+**/node_modules
+**/.next
+node_modules
+.next
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.db-shm
+*.db-wal
+.env*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

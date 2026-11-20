@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   db:
     image: postgres:16-alpine
@@ -7,8 +5,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: pakcareer
-      # Set POSTGRES_PASSWORD in a .env file next to this compose file (never commit it)
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pakcareer_secret_password}
       POSTGRES_DB: pakcareer
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -29,7 +26,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg2://pakcareer:${POSTGRES_PASSWORD}@db:5432/pakcareer
+      DATABASE_URL: postgresql+psycopg2://pakcareer:${POSTGRES_PASSWORD:-pakcareer_secret_password}@db:5432/pakcareer
       PORT: 8000
       MODEL_DIR: /models/weights
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
