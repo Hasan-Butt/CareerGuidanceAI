@@ -2,6 +2,8 @@
 import type {
   AnalyticsData,
   AssessmentPayload,
+  FollowupQuestion,
+  GeminiEnrichment,
   OrgRecord,
   PredictResponse,
   SessionRecord,
@@ -100,5 +102,29 @@ export function fetchOrg(invite_code: string): Promise<Pick<OrgRecord, "invite_c
 /** Dashboard login: which organisation does the stored key belong to? */
 export function fetchMyOrg(key?: string): Promise<OrgRecord> {
   return apiFetch<OrgRecord>("/api/orgs/me", key ? { headers: { "X-Org-Key": key } } : undefined);
+}
+
+// ── Gemini Layer ──────────────────────────────────────────────────────────────
+
+export function fetchFollowupQuestions(payload: {
+  xgb_probabilities: Array<{ house: string; probability: number; emoji: string }>;
+  holland_code: string;
+  weak_domains: string[];
+}): Promise<{ questions: FollowupQuestion[] }> {
+  return apiFetch<{ questions: FollowupQuestion[] }>("/api/gemini/followup-questions", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchGeminiEnrichment(payload: {
+  xgb_ranking: Array<{ house: string; emoji: string; probability: number }>;
+  followup_answers: Record<string, string>;
+  holland_code: string;
+}): Promise<GeminiEnrichment> {
+  return apiFetch<GeminiEnrichment>("/api/gemini/validate-enrich", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 

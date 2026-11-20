@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from db.database import SessionLocal, init_db
 from db.models import Org
-from routers import orgs, predict, sessions
+from routers import gemini, orgs, predict, sessions
 from security import hash_key, new_access_key
 
 log = logging.getLogger("uvicorn.error")
@@ -44,6 +44,7 @@ app.add_middleware(
 app.include_router(predict.router, prefix="/api")
 app.include_router(sessions.router, prefix="/api")
 app.include_router(orgs.router, prefix="/api")
+app.include_router(gemini.router, prefix="/api")
 
 
 # ── Demo orgs seed ────────────────────────────────────────────────────────────

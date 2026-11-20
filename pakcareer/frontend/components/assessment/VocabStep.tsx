@@ -19,6 +19,7 @@ export function VocabStep() {
     vocab,
     setVocab,
     setResults,
+    setXgbResult,
     setStep,
     loading,
     setLoading,
@@ -55,15 +56,18 @@ export function VocabStep() {
 
       const res = await fetchPredict(payload);
 
+      // Store base XGBoost results
       setResults({
         sessionId: res.session_id,
         top3: res.top3,
         allResults: res.all_results,
         profile: res.profile,
       });
+      setXgbResult(res);
 
-      setStep("results");
-      router.push(`/assessment/results?session=${res.session_id}`);
+      // Transition to Stage 1 Follow-up
+      setStep("followup");
+      router.push("/assessment/followup");
     } catch (err: unknown) {
       console.error("Submission failed:", err);
       setError(
@@ -145,11 +149,10 @@ export function VocabStep() {
             onBack={handleBack}
             onNext={handleSubmit}
             loading={loading}
-            nextLabel="Submit & Generate Results"
+            nextLabel="Continue to AI Follow-up"
           />
         </CardContent>
       </Card>
     </div>
   );
 }
-

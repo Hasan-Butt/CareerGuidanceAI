@@ -7,6 +7,7 @@ import { AboutStep } from "@/components/assessment/AboutStep";
 import { RiasecStep } from "@/components/assessment/RiasecStep";
 import { TipiStep } from "@/components/assessment/TipiStep";
 import { VocabStep } from "@/components/assessment/VocabStep";
+import { FollowupStep } from "@/components/assessment/FollowupStep";
 import { ResultsStep } from "@/components/assessment/ResultsStep";
 
 interface PageProps {
@@ -32,6 +33,12 @@ export default function AssessmentStepPage({ params }: PageProps) {
       return <TipiStep />;
     case "vocab":
       return <VocabStep />;
+    case "followup":
+      return (
+        <Suspense fallback={<div className="py-20 text-center text-slate-500">Loading AI follow-up...</div>}>
+          <FollowupStep />
+        </Suspense>
+      );
     case "results":
       return (
         <Suspense fallback={<div className="py-20 text-center text-slate-500">Loading results...</div>}>

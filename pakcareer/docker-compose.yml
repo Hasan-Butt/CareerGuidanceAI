@@ -31,6 +31,7 @@ services:
       MODEL_DIR: /models/weights
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
       ADMIN_KEY: ${ADMIN_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - ../models:/models:ro
     ports:

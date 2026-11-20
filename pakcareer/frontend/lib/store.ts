@@ -1,7 +1,14 @@
-// ── Zustand assessment store with sessionStorage persistence ──────────────────
+// ── Zustand assessment store with sessionStorage persistence ──────────────────────
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { AssessmentProfile, HouseResult, WizardStep } from "./types";
+import type {
+  AssessmentProfile,
+  FollowupQuestion,
+  GeminiEnrichment,
+  HouseResult,
+  PredictResponse,
+  WizardStep,
+} from "./types";
 
 interface AboutData {
   age: number;
@@ -45,6 +52,22 @@ interface AssessmentState {
     profile: AssessmentProfile;
   }) => void;
 
+  // Raw XGBoost result (stored separately for Gemini layer)
+  xgbResult: PredictResponse | null;
+  setXgbResult: (r: PredictResponse | null) => void;
+
+  // Gemini Stage 1 — follow-up questions
+  followupQuestions: FollowupQuestion[] | null;
+  setFollowupQuestions: (q: FollowupQuestion[] | null) => void;
+
+  // Gemini Stage 1 — student answers {question_id: "A"|"B"|"C"|"D"}
+  followupAnswers: Record<string, string>;
+  setFollowupAnswer: (questionId: string, answer: string) => void;
+
+  // Gemini Stage 2 — enrichment result
+  geminiEnrichment: GeminiEnrichment | null;
+  setGeminiEnrichment: (e: GeminiEnrichment | null) => void;
+
   // Loading / error
   loading: boolean;
   error: string | null;
@@ -58,7 +81,9 @@ interface AssessmentState {
 const INITIAL: Omit<
   AssessmentState,
   | "setStep" | "setAbout" | "setRiasec" | "setTipi" | "setVocab"
-  | "setResults" | "setLoading" | "setError" | "reset"
+  | "setResults" | "setXgbResult"
+  | "setFollowupQuestions" | "setFollowupAnswer" | "setGeminiEnrichment"
+  | "setLoading" | "setError" | "reset"
 > = {
   step: "landing",
   about: {},
@@ -69,6 +94,10 @@ const INITIAL: Omit<
   top3: [],
   allResults: [],
   profile: null,
+  xgbResult: null,
+  followupQuestions: null,
+  followupAnswers: {},
+  geminiEnrichment: null,
   loading: false,
   error: null,
 };
@@ -88,6 +117,13 @@ export const useAssessmentStore = create<AssessmentState>()(
         set((s) => ({ vocab: { ...s.vocab, [key]: val } })),
       setResults: ({ sessionId, top3, allResults, profile }) =>
         set({ sessionId, top3, allResults, profile }),
+      setXgbResult: (xgbResult) => set({ xgbResult }),
+      setFollowupQuestions: (followupQuestions) => set({ followupQuestions }),
+      setFollowupAnswer: (questionId, answer) =>
+        set((s) => ({
+          followupAnswers: { ...s.followupAnswers, [questionId]: answer },
+        })),
+      setGeminiEnrichment: (geminiEnrichment) => set({ geminiEnrichment }),
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
       reset: () => set({ ...INITIAL }),
@@ -108,8 +144,11 @@ export const useAssessmentStore = create<AssessmentState>()(
         top3: s.top3,
         allResults: s.allResults,
         profile: s.profile,
+        xgbResult: s.xgbResult,
+        followupQuestions: s.followupQuestions,
+        followupAnswers: s.followupAnswers,
+        geminiEnrichment: s.geminiEnrichment,
       }),
     }
   )
 );
-

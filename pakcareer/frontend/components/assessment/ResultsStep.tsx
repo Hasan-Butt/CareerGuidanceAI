@@ -19,6 +19,12 @@ import {
   ExternalLink,
   Briefcase,
   GraduationCap,
+  Building2,
+  Banknote,
+  Compass,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
 } from "lucide-react";
 import {
   BarChart,
@@ -29,7 +35,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import type { SessionRecord } from "@/lib/types";
+import type { SessionRecord, GeminiAdjustedHouse } from "@/lib/types";
 
 const HOUSE_DESCRIPTIONS: Record<string, { desc: string; degrees: string[]; careers: string[] }> = {
   "Computer Science & IT": {
@@ -89,6 +95,7 @@ export function ResultsStep() {
     top3: storeTop3,
     allResults: storeAllResults,
     profile: storeProfile,
+    geminiEnrichment,
     reset,
   } = useAssessmentStore();
 
@@ -150,6 +157,29 @@ export function ResultsStep() {
   }
 
   const primaryMatch = top3[0];
+  const hasGemini = !!geminiEnrichment;
+
+  // Map adjusted ranking if available, else standard top-3
+  const displayHouses: Array<{
+    house: string;
+    emoji: string;
+    psychometricProb: number;
+    aiConfidence?: number;
+    rankChange?: number;
+    narrative?: string;
+  }> = top3.map((res, idx) => {
+    const adjustedInfo = geminiEnrichment?.adjusted_ranking.find(
+      (a) => a.house.toLowerCase() === res.house.toLowerCase()
+    );
+    return {
+      house: res.house,
+      emoji: res.emoji || "🎓",
+      psychometricProb: res.probability,
+      aiConfidence: adjustedInfo ? adjustedInfo.adjusted_confidence : undefined,
+      rankChange: adjustedInfo ? adjustedInfo.rank_change : 0,
+      narrative: geminiEnrichment?.narratives[res.house],
+    };
+  });
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 py-6">
@@ -159,7 +189,7 @@ export function ResultsStep() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-800/80 border border-teal-400/30 text-teal-200 text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5 text-teal-300" />
-              Machine Learning Prediction Complete
+              {hasGemini ? "Gemini 2.5 AI-Verified Assessment" : "Machine Learning Prediction Complete"}
             </div>
             {effectiveSessionId && (
               <span className="text-xs text-slate-400 font-mono">
@@ -177,9 +207,16 @@ export function ResultsStep() {
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
                 {primaryMatch.house}
               </h1>
-              <Badge variant="accent" className="text-sm px-3 py-1">
-                {primaryMatch.probability}% Match
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="accent" className="text-sm px-3 py-1 bg-teal-500 text-slate-950 font-bold">
+                  {primaryMatch.probability}% Psychometric Match
+                </Badge>
+                {displayHouses[0]?.aiConfidence !== undefined && (
+                  <Badge variant="outline" className="text-sm px-3 py-1 border-amber-300 text-amber-200 font-bold bg-amber-400/10">
+                    {displayHouses[0].aiConfidence}% AI-Verified
+                  </Badge>
+                )}
+              </div>
             </div>
             <p className="text-slate-300 text-sm sm:text-base max-w-2xl pt-1 leading-relaxed">
               {HOUSE_DESCRIPTIONS[primaryMatch.house]?.desc ||
@@ -187,8 +224,21 @@ export function ResultsStep() {
             </p>
           </div>
 
-          {/* How sure is the model? (top-1 is right ~57% of the time, top-3 ~86%) */}
-          {top3.length > 1 && (
+          {/* Gemini Validation Summary Banner */}
+          {hasGemini && geminiEnrichment.validation_summary && (
+            <div className="rounded-xl border border-teal-400/30 bg-teal-950/40 p-4 text-xs sm:text-sm text-teal-100 space-y-1.5 shadow-inner">
+              <div className="flex items-center gap-2 font-bold text-teal-300">
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>AI Job Market Validation Summary</span>
+              </div>
+              <p className="leading-relaxed text-slate-200">
+                {geminiEnrichment.validation_summary}
+              </p>
+            </div>
+          )}
+
+          {/* How sure is the model? */}
+          {!hasGemini && top3.length > 1 && (
             <div
               className={`rounded-lg border px-4 py-3 text-sm leading-relaxed ${
                 primaryMatch.probability - top3[1].probability < 10
@@ -252,62 +302,218 @@ export function ResultsStep() {
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full grid grid-cols-3 p-1.5 h-auto">
-          <TabsTrigger value="matches" className="py-2.5 text-xs sm:text-sm">
-            Top Degree Matches
+          <TabsTrigger value="matches" className="py-2.5 text-xs sm:text-sm font-semibold">
+            {hasGemini ? "AI-Verified Matches" : "Top Degree Matches"}
           </TabsTrigger>
-          <TabsTrigger value="profile" className="py-2.5 text-xs sm:text-sm">
+          <TabsTrigger value="profile" className="py-2.5 text-xs sm:text-sm font-semibold">
             Psychometric Profile
           </TabsTrigger>
-          <TabsTrigger value="careers" className="py-2.5 text-xs sm:text-sm">
+          <TabsTrigger value="careers" className="py-2.5 text-xs sm:text-sm font-semibold">
             Careers & Pakistan Outlook
           </TabsTrigger>
         </TabsList>
 
-        {/* ── TAB 1: MATCHES ── */}
+        {/* ── TAB 1: MATCHES (AI-VERIFIED & PSYCHOMETRIC) ── */}
         <TabsContent value="matches" className="space-y-6 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {top3.map((res, idx) => (
-              <Card
-                key={res.house}
-                className={`relative transition-all ${
-                  idx === 0
-                    ? "border-teal-500 shadow-md ring-2 ring-teal-500/20"
-                    : "border-slate-200 shadow-xs"
-                }`}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl">{res.emoji}</span>
-                    <Badge
-                      variant={idx === 0 ? "default" : "secondary"}
-                      className="font-bold text-xs"
-                    >
-                      Rank #{idx + 1}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-lg font-bold text-[#0f2f38] pt-2">
-                    {res.house}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold text-slate-600">
-                      <span>Model Confidence</span>
-                      <span className="text-[#0f766e]">{res.probability}%</span>
+          <div className="space-y-6">
+            {displayHouses.map((item, idx) => {
+              const market = geminiEnrichment?.market_data?.[item.house];
+
+              return (
+                <Card
+                  key={item.house}
+                  className={`overflow-hidden transition-all ${
+                    idx === 0
+                      ? "border-teal-500 shadow-md ring-2 ring-teal-500/20"
+                      : "border-slate-200 shadow-xs"
+                  }`}
+                >
+                  <CardHeader className="bg-slate-50/70 border-b border-slate-100 pb-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">{item.emoji}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <CardTitle className="text-lg font-bold text-[#0f2f38]">
+                              {item.house}
+                            </CardTitle>
+                            <Badge
+                              variant={idx === 0 ? "default" : "secondary"}
+                              className="font-bold text-xs"
+                            >
+                              Rank #{idx + 1}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-slate-500 pt-0.5">
+                            {HOUSE_DESCRIPTIONS[item.house]?.desc}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Rank delta if Gemini adjusted */}
+                      {item.rankChange !== undefined && item.rankChange !== 0 && (
+                        <Badge
+                          variant="outline"
+                          className={`text-xs gap-1 font-semibold ${
+                            item.rankChange > 0
+                              ? "border-emerald-300 text-emerald-700 bg-emerald-50"
+                              : "border-amber-300 text-amber-700 bg-amber-50"
+                          }`}
+                        >
+                          {item.rankChange > 0 ? (
+                            <ArrowUpRight className="w-3.5 h-3.5" />
+                          ) : (
+                            <ArrowDownRight className="w-3.5 h-3.5" />
+                          )}
+                          Rank adjusted {item.rankChange > 0 ? `+${item.rankChange}` : item.rankChange} by AI
+                        </Badge>
+                      )}
                     </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[#0f766e] rounded-full"
-                        style={{ width: `${res.probability}%` }}
-                      />
+                  </CardHeader>
+
+                  <CardContent className="p-5 space-y-5">
+                    {/* Side-by-side Dual Score Meters */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200/70">
+                      {/* XGBoost Psychometric Score */}
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between items-center text-xs font-semibold">
+                          <span className="text-slate-600 flex items-center gap-1.5">
+                            <Compass className="w-3.5 h-3.5 text-[#0f766e]" />
+                            Psychometric Match (XGBoost)
+                          </span>
+                          <span className="font-bold font-mono text-[#0f766e]">
+                            {item.psychometricProb}%
+                          </span>
+                        </div>
+                        <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[#0f766e] rounded-full transition-all"
+                            style={{ width: `${item.psychometricProb}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-slate-400">
+                          Based on RIASEC interest & personality traits
+                        </span>
+                      </div>
+
+                      {/* Gemini AI-Verified Score */}
+                      {item.aiConfidence !== undefined ? (
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center text-xs font-semibold">
+                            <span className="text-slate-600 flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                              AI-Verified Confidence (Gemini)
+                            </span>
+                            <span className="font-bold font-mono text-amber-700">
+                              {item.aiConfidence}%
+                            </span>
+                          </div>
+                          <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-amber-500 to-[#c45c26] rounded-full transition-all"
+                              style={{ width: `${item.aiConfidence}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] text-slate-400">
+                            Enriched with live Pakistani job market demand
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center text-xs text-slate-400 italic">
+                          <span>AI validation available upon completing follow-up.</span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <p className="text-xs text-slate-500 line-clamp-3">
-                    {HOUSE_DESCRIPTIONS[res.house]?.desc}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+
+                    {/* Gemini Narrative Explanation */}
+                    {item.narrative && (
+                      <div className="rounded-xl border border-teal-200/80 bg-teal-50/50 p-4 text-xs leading-relaxed space-y-1.5">
+                        <div className="flex items-center gap-1.5 font-bold text-[#0f766e]">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                          <span>AI Market Guidance Narrative</span>
+                        </div>
+                        <p className="text-slate-700">
+                          {item.narrative}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Live Market Data Card Grid */}
+                    {market && (
+                      <div className="space-y-3 pt-1">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <TrendingUp className="w-3.5 h-3.5 text-[#0f766e]" />
+                          Live Pakistani Market Intelligence
+                        </h4>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {/* Avg Salary */}
+                          <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                              <Banknote className="w-3.5 h-3.5 text-emerald-600" /> Monthly Starting
+                            </span>
+                            <div className="text-sm font-extrabold text-[#0f2f38]">
+                              PKR {market.avg_salary_pkr}
+                            </div>
+                            <span className="text-[10px] text-slate-400">Tier-1 city entry level</span>
+                          </div>
+
+                          {/* Rozee Openings */}
+                          <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                              <Briefcase className="w-3.5 h-3.5 text-blue-600" /> Active Job Postings
+                            </span>
+                            <div className="text-sm font-extrabold text-[#0f2f38]">
+                              {market.rozee_openings} Openings
+                            </div>
+                            <span className="text-[10px] text-slate-400">Rozee.pk / LinkedIn PK</span>
+                          </div>
+
+                          {/* Growth Outlook */}
+                          <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs space-y-1">
+                            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                              <TrendingUp className="w-3.5 h-3.5 text-amber-600" /> Market Outlook
+                            </span>
+                            <div className="text-xs font-bold text-slate-700 line-clamp-2">
+                              {market.growth_outlook}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Top Hiring Companies & Roles */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                          <div className="space-y-1.5">
+                            <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
+                              <Building2 className="w-3.5 h-3.5 text-slate-500" /> Key Hiring Employers
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {market.top_companies?.map((comp) => (
+                                <Badge key={comp} variant="outline" className="text-[10px] bg-slate-50">
+                                  {comp}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
+                              <GraduationCap className="w-3.5 h-3.5 text-slate-500" /> High-Demand Roles
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {market.top_roles?.map((role) => (
+                                <Badge key={role} variant="secondary" className="text-[10px]">
+                                  {role}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* All 7 Houses Bar Chart */}
@@ -364,6 +570,13 @@ export function ResultsStep() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Gemini Sources Attribution Footer */}
+          {hasGemini && geminiEnrichment.data_sources && (
+            <div className="text-center text-[11px] text-slate-400 pt-2 pb-4">
+              AI Market Grounding Sources: {geminiEnrichment.data_sources.join(" • ")}
+            </div>
+          )}
         </TabsContent>
 
         {/* ── TAB 2: PSYCHOMETRIC PROFILE ── */}
@@ -555,4 +768,3 @@ export function ResultsStep() {
     </div>
   );
 }
-

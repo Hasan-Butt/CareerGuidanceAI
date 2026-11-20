@@ -84,6 +84,7 @@ export type WizardStep =
   | "riasec"
   | "tipi"
   | "vocab"
+  | "followup"
   | "results";
 
 export const WIZARD_STEPS: WizardStep[] = [
@@ -92,15 +93,55 @@ export const WIZARD_STEPS: WizardStep[] = [
   "riasec",
   "tipi",
   "vocab",
+  "followup",
   "results",
 ];
 
 export const STEP_LABELS: Record<WizardStep, string> = {
-  landing: "Welcome",
-  about:   "About You",
-  riasec:  "Interests",
-  tipi:    "Personality",
-  vocab:   "Vocabulary",
-  results: "Results",
+  landing:  "Welcome",
+  about:    "About You",
+  riasec:   "Interests",
+  tipi:     "Personality",
+  vocab:    "Vocabulary",
+  followup: "Follow-up",
+  results:  "Results",
 };
+
+// ── Gemini layer types ──────────────────────────────────────────────────────
+
+export interface FollowupOption {
+  key: "A" | "B" | "C" | "D";
+  text: string;
+  maps_to: string;
+}
+
+export interface FollowupQuestion {
+  id: string;
+  question: string;
+  options: FollowupOption[];
+}
+
+export interface GeminiAdjustedHouse {
+  house: string;
+  emoji: string;
+  original_probability: number;
+  adjusted_confidence: number;
+  rank_change: number;
+}
+
+export interface MarketData {
+  avg_salary_pkr: string;
+  rozee_openings: string;
+  top_roles: string[];
+  top_companies: string[];
+  growth_outlook: string;
+}
+
+export interface GeminiEnrichment {
+  adjusted_ranking: GeminiAdjustedHouse[];
+  market_data: Record<string, MarketData>;
+  narratives: Record<string, string>;
+  validation_summary: string;
+  data_sources: string[];
+}
 
