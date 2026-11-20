@@ -120,13 +120,13 @@ export default function MarketingLandingPage() {
               </div>
 
               <div className="flex items-center justify-between gap-3 pt-2">
-                <div className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-md border border-white/60 p-1 flex items-center justify-center shadow-md">
+                <div className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-md border border-white/60 p-0.5 flex items-center justify-center shadow-md overflow-hidden">
                   <Image
-                    src="/search-badge.png"
+                    src="/3d-search-badge.png"
                     alt="Career Search"
                     width={56}
                     height={56}
-                    className="w-full h-full object-contain rounded-full"
+                    className="w-full h-full object-cover rounded-full"
                   />
                 </div>
                 <div className="text-right">
@@ -140,12 +140,12 @@ export default function MarketingLandingPage() {
               </div>
 
               {/* 3D Robot Image */}
-              <div className="relative w-full h-52 flex items-center justify-center my-2">
+              <div className="relative w-full h-52 rounded-2xl overflow-hidden border border-white/50 shadow-md bg-white/10 my-2">
                 <Image
-                  src="/robot-desk.png"
+                  src="/3d-robot-desk.png"
                   alt="AI Career Robot"
                   fill
-                  className="object-contain drop-shadow-xl"
+                  className="object-cover"
                   priority
                 />
               </div>

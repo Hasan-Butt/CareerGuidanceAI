@@ -40,7 +40,6 @@ export function RiasecStep() {
   const currentDomain = RIASEC_DOMAINS[currentDomainIdx];
   const questions = RIASEC_QUESTIONS[currentDomain] || [];
 
-  // Check if all 8 questions in current domain have been answered
   const isCurrentDomainComplete = questions.every((_, qIdx) => {
     const key = `${currentDomain}${qIdx + 1}`;
     return riasec[key] !== undefined && riasec[key] >= 1 && riasec[key] <= 5;
@@ -75,9 +74,9 @@ export function RiasecStep() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 py-6">
-      {/* Domain Navigation Pills */}
-      <div className="flex items-center justify-between gap-1 overflow-x-auto pb-2">
+    <div className="max-w-3xl mx-auto space-y-5 py-4 px-2 sm:px-0">
+      {/* Frosted Domain Navigation Pills */}
+      <div className="flex items-center justify-between gap-1.5 overflow-x-auto pb-1">
         {RIASEC_DOMAINS.map((dom, idx) => {
           const domAnswered = (RIASEC_QUESTIONS[dom] || []).filter((_, qIdx) => {
             const k = `${dom}${qIdx + 1}`;
@@ -94,16 +93,18 @@ export function RiasecStep() {
                 setCurrentDomainIdx(idx);
                 router.push(`/assessment/riasec?domain=${idx}`);
               }}
-              className={`flex-1 min-w-[70px] sm:min-w-[100px] py-2 px-2 rounded-lg text-xs font-semibold border transition-all text-center cursor-pointer ${
+              className={`flex-1 min-w-[70px] sm:min-w-[100px] py-2 px-2.5 rounded-full text-xs font-bold border transition-all text-center cursor-pointer ${
                 isCurrent
-                  ? "bg-[#0f766e] text-white border-[#0f766e] shadow-xs"
+                  ? "bg-[#2b64ab] text-white border-[#2b64ab] shadow-md shadow-blue-900/20"
                   : isComplete
-                  ? "bg-teal-50 text-teal-800 border-teal-200"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                  ? "bg-blue-50/80 text-[#2b64ab] border-blue-200"
+                  : "bg-white/60 text-slate-700 border-white/80 hover:bg-white"
               }`}
             >
-              <div className="font-bold">{dom}</div>
-              <div className="text-[10px] hidden sm:block truncate">{DOMAIN_LABELS[dom]}</div>
+              <div className="font-extrabold">{dom}</div>
+              <div className="text-[10px] hidden sm:block truncate opacity-85">
+                {DOMAIN_LABELS[dom]}
+              </div>
             </button>
           );
         })}
@@ -112,14 +113,14 @@ export function RiasecStep() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#0f766e]">
+            <span className="text-xs font-bold text-[#2b64ab] bg-blue-50 px-3 py-1 rounded-full border border-blue-200/60 shadow-2xs">
               Domain {currentDomainIdx + 1} of 6: {DOMAIN_LABELS[currentDomain]} ({currentDomain})
             </span>
-            <span className="text-xs font-medium text-slate-500">
+            <span className="text-xs font-bold text-slate-500 bg-white/70 px-2.5 py-0.5 rounded-full border border-white">
               8 activities
             </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-[#0f2f38]">
+          <CardTitle className="text-2xl font-extrabold text-[#0f2942] pt-2">
             {DOMAIN_DESCRIPTIONS[currentDomain]}
           </CardTitle>
           <CardDescription>
@@ -127,7 +128,7 @@ export function RiasecStep() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {questions.map((qText, qIdx) => {
               const itemKey = `${currentDomain}${qIdx + 1}`;
               const selectedValue = riasec[itemKey];
@@ -135,15 +136,15 @@ export function RiasecStep() {
               return (
                 <div
                   key={itemKey}
-                  className={`p-4 rounded-xl border transition-all ${
+                  className={`p-4 rounded-[22px] border transition-all ${
                     selectedValue !== undefined
-                      ? "border-teal-200 bg-teal-50/20"
-                      : "border-slate-200/80 bg-white"
+                      ? "border-blue-200 bg-blue-50/40 shadow-xs ring-1 ring-blue-300/40"
+                      : "border-slate-200/90 bg-white/85"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
-                    <p className="text-sm font-medium text-slate-900 leading-snug">
-                      <span className="font-bold text-slate-400 mr-2">
+                    <p className="text-xs sm:text-sm font-bold text-[#0f2942] leading-snug">
+                      <span className="font-extrabold text-[#2b64ab] mr-2">
                         {qIdx + 1}.
                       </span>
                       {qText}
@@ -158,13 +159,13 @@ export function RiasecStep() {
                           key={opt.val}
                           type="button"
                           onClick={() => handleScore(itemKey, opt.val)}
-                          className={`py-2 px-1 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                          className={`py-2 px-1 rounded-[16px] text-xs font-bold border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
                             isChosen
-                              ? "bg-[#0f766e] text-white border-[#0f766e] shadow-xs"
-                              : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                              ? "bg-[#2b64ab] text-white border-[#2b64ab] shadow-md shadow-blue-900/15"
+                              : "bg-white/90 text-slate-700 border-slate-200/90 hover:border-slate-300 hover:bg-slate-50"
                           }`}
                         >
-                          <span className="font-bold text-sm sm:text-base">
+                          <span className="font-extrabold text-sm sm:text-base">
                             {opt.val}
                           </span>
                           <span className="text-[10px] hidden sm:inline leading-tight">
@@ -194,4 +195,3 @@ export function RiasecStep() {
     </div>
   );
 }
-

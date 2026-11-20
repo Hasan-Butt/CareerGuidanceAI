@@ -15,7 +15,7 @@ function NavContent() {
 
   return (
     <nav className="p-4 space-y-1.5 flex-1">
-      <div className="text-[10px] uppercase font-bold text-teal-300/70 tracking-wider px-3 mb-2">
+      <div className="text-[10px] uppercase font-bold text-blue-200/70 tracking-wider px-3 mb-2">
         Management
       </div>
       {navItems.map((item) => {
@@ -25,10 +25,10 @@ function NavContent() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            className={`flex items-center justify-between px-3 py-2.5 rounded-full text-xs sm:text-sm transition-all ${
               isActive
-                ? "bg-teal-600 text-white shadow-xs"
-                : "text-teal-100 hover:bg-teal-800/50 hover:text-white"
+                ? "bg-[#2b64ab] text-white font-bold shadow-md shadow-blue-950/40"
+                : "text-blue-100 hover:bg-white/10 hover:text-white font-semibold"
             }`}
           >
             <div className="flex items-center gap-2.5">
@@ -41,19 +41,19 @@ function NavContent() {
       })}
 
       <div className="pt-6">
-        <div className="text-[10px] uppercase font-bold text-teal-300/70 tracking-wider px-3 mb-2">
-          Public Testing
+        <div className="text-[10px] uppercase font-bold text-blue-200/70 tracking-wider px-3 mb-2">
+          Assessment Flow
         </div>
         <Link
           href="/assessment/landing"
           target="_blank"
-          className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-teal-200 hover:bg-teal-800/40"
+          className="flex items-center justify-between px-3 py-2 rounded-full text-xs text-blue-200 hover:bg-white/10"
         >
-          <div className="flex items-center gap-2">
-            <GraduationCap className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-2 font-medium">
+            <GraduationCap className="w-3.5 h-3.5 text-blue-300" />
             <span>Student Assessment</span>
           </div>
-          <ExternalLink className="w-3 h-3 text-teal-400" />
+          <ExternalLink className="w-3 h-3 text-blue-300" />
         </Link>
       </div>
     </nav>
@@ -67,4 +67,3 @@ export function DashboardNav() {
     </Suspense>
   );
 }
-

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAssessmentStore } from "@/lib/store";
-import { ArrowUpRight, Search, Sparkles, Shield, Compass, Award } from "lucide-react";
+import { ArrowUpRight, Shield, Award } from "lucide-react";
 
 export function LandingStep() {
   const router = useRouter();
@@ -21,14 +21,14 @@ export function LandingStep() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-4 px-2 sm:px-0">
+    <div className="max-w-md mx-auto py-2 sm:py-4 px-2 sm:px-0">
       {/* Mobile-Frame-Style Glassmorphic Card (exact replica of Left Screen) */}
-      <div className="relative rounded-[36px] overflow-hidden bg-gradient-to-b from-[#87a9ca] via-[#9bb9d4] to-[#bed3e8] border border-white/60 shadow-[0_24px_60px_-15px_rgba(20,50,90,0.25)] p-6 sm:p-8 flex flex-col justify-between min-h-[640px]">
+      <div className="relative rounded-[36px] overflow-hidden bg-gradient-to-b from-[#87a9ca] via-[#9bb9d4] to-[#bed3e8] border border-white/70 shadow-[0_24px_60px_-15px_rgba(20,50,90,0.25)] p-6 sm:p-8 flex flex-col justify-between min-h-[660px]">
         {/* Ambient Top Bar */}
         <div className="flex items-center justify-between text-xs text-white/90 font-semibold pt-1 pb-4">
           <span className="font-mono text-sm tracking-tight text-white/90">9:40 PM</span>
           <div className="flex items-center gap-1.5 text-white/90">
-            <span className="text-[11px] bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/30">
+            <span className="text-[11px] bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/30">
               PakCareer PAAS
             </span>
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white/50" />
@@ -40,13 +40,13 @@ export function LandingStep() {
           {/* Magnifying Glass 3D Search Badge & Title Row */}
           <div className="flex items-start justify-between gap-3">
             <div className="relative">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-md border border-white/60 p-1 shadow-lg flex items-center justify-center">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/25 backdrop-blur-md border border-white/60 p-1 shadow-lg flex items-center justify-center overflow-hidden">
                 <Image
-                  src="/search-badge.png"
-                  alt="Search Badge"
-                  width={72}
-                  height={72}
-                  className="w-full h-full object-contain rounded-full drop-shadow-md"
+                  src="/3d-search-badge.png"
+                  alt="3D Search Badge"
+                  width={76}
+                  height={76}
+                  className="w-full h-full object-cover rounded-full drop-shadow-md"
                   priority
                 />
               </div>
@@ -68,14 +68,14 @@ export function LandingStep() {
           </p>
         </div>
 
-        {/* 3D Robot Character Image (Exact from reference) */}
-        <div className="relative my-4 flex items-center justify-center">
-          <div className="relative w-full max-w-[260px] h-[240px] flex items-center justify-center">
+        {/* Studio-Quality 3D Robot Character Image */}
+        <div className="relative my-3 flex items-center justify-center">
+          <div className="relative w-full max-w-[270px] h-[220px] rounded-[24px] overflow-hidden border border-white/50 shadow-xl bg-white/10 backdrop-blur-xs">
             <Image
-              src="/robot-desk.png"
+              src="/3d-robot-desk.png"
               alt="3D Career AI Robot"
               fill
-              className="object-contain drop-shadow-2xl"
+              className="object-cover"
               priority
             />
           </div>
