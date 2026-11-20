@@ -1,7 +1,15 @@
 import React, { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { AssessmentHeader } from "@/components/assessment/AssessmentHeader";
 import { Users } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Student Degree Assessment",
+  description:
+    "10-minute vocational interest assessment matching students against 7 Pakistani university degree families.",
+};
 
 export default function AssessmentLayout({
   children,
@@ -14,9 +22,14 @@ export default function AssessmentLayout({
       <header className="bg-white border-b border-slate-200 py-3.5 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#0f766e] text-white flex items-center justify-center font-bold text-sm shadow-xs">
-              PK
-            </div>
+            <Image
+              src="/logo.png"
+              alt="PakCareer AI Logo"
+              width={34}
+              height={34}
+              className="w-8 h-8 rounded-lg object-cover shadow-xs border border-slate-200/60"
+              priority
+            />
             <div className="flex flex-col">
               <span className="font-extrabold text-[#0f2f38] text-base leading-tight">
                 PakCareer <span className="text-[#0f766e]">AI</span>

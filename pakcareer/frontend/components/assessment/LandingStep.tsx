@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAssessmentStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,16 @@ export function LandingStep() {
   return (
     <div className="max-w-3xl mx-auto space-y-8 py-6">
       <div className="text-center space-y-4">
+        <div className="flex justify-center">
+          <Image
+            src="/logo.png"
+            alt="PakCareer AI Logo"
+            width={80}
+            height={80}
+            className="w-20 h-20 rounded-2xl shadow-md border border-slate-200/80 object-cover"
+            priority
+          />
+        </div>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-[#0f766e] text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5" />
           Powered by XGBoost Machine Learning
