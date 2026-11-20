@@ -25,37 +25,60 @@ interests (RIASEC) and personality (Big Five), and backs the recommendation with
 |---|---|---|
 | 1 | Problem definition, data acquisition & preprocessing | ✅ Report: [`report/main.pdf`](report/main.pdf) |
 | 2 | Model implementation & evaluation | ✅ XGBoost (top-3 **86.5%** on 16,252 students) |
-| 3 | Hosted web app + final report | ✅ Streamlit app in [`app/`](app/) (premium wizard + demo PAAS) |
+| 3 | Hosted web app + final report | ✅ Fullstack App in [`pakcareer/`](pakcareer/) (Next.js 16 + FastAPI + PostgreSQL PAAS) |
 
 ## Run the web app
 
+### Option 1: Docker Compose (All-in-one with PostgreSQL)
 ```bash
+cd pakcareer
+docker compose up --build
+```
+- Student App: [http://localhost:3000](http://localhost:3000)
+- Counsellor PAAS Portal: [http://localhost:3000/dashboard](http://localhost:3000/dashboard)
+- FastAPI Swagger Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Option 2: Local Development
+**Backend (FastAPI):**
+```bash
+cd pakcareer/backend
 pip install -r requirements.txt
-# place model weights (see Model Weights below)
-streamlit run app/app.py
+uvicorn main:app --reload --port 8000
 ```
 
-**Student flow:** multi-step wizard (demographics → 48 RIASEC items → TIPI → vocabulary checklist → results).  
-**Counsellor / school demo:** sidebar → *Counsellor workspace*; demo invite codes `FAST-LAHORE`, `COUNSEL-DEMO`, `LGS-DEMO`. Sessions save locally to `data/app/sessions.db` with shareable Session IDs and PDF parent packs.
+**Frontend (Next.js 16):**
+```bash
+cd pakcareer/frontend
+npm install
+npm run dev
+```
+
+**Student flow:** 6-step wizard (About → 48 Holland RIASEC items → TIPI Big Five → 16-word vocabulary checklist → Multidimensional match results).  
+**Counsellor / school demo:** Institutional dashboard (`/dashboard`) with cohort interest distributions, individual session drill-down, confidential notes, and downloadable parent report PDFs; demo invite codes `FAST-LAHORE`, `COUNSEL-DEMO`, `LGS-DEMO`.
 
 ## Repository layout
 
 ```
 pakcareer-ai/
-├── app/                       # Streamlit product
-│   ├── app.py                 # multi-step wizard + counsellor workspace
-│   ├── predictor.py           # 88-feature inference
-│   ├── pakistan_stats.py      # ILO / Rozee house cards
-│   ├── questions.py           # RIASEC / TIPI / vocab content
-│   ├── storage.py             # SQLite sessions + org invite codes
-│   ├── report_pdf.py          # parents' PDF report
-│   └── styles.css             # premium theme
-├── src/models/                # training + evaluation
-├── data_scripts/              # Phase 2 data pipeline
-├── docs/                      # collection + cleaning logs (evidence, small JSON)
-├── report/                    # LaTeX source, figures, compiled PDF
-├── survey/                    # Google Form spec for the Pakistani student survey
-├── models/weights/            # NOT in git — download from Drive
+├── pakcareer/                 # Production Fullstack Application
+│   ├── backend/               # FastAPI backend serving XGBoost inference
+│   │   ├── main.py            # API entry point & CORS
+│   │   ├── questions.py       # RIASEC / TIPI / vocab content
+│   │   ├── db/                # SQLAlchemy models & migrations (Postgres / SQLite)
+│   │   ├── routers/           # predict, sessions, orgs endpoints
+│   │   └── services/          # predictor, report_pdf, pakistan_stats
+│   ├── frontend/              # Next.js 16 (App Router) + Tailwind v4 + Recharts
+│   │   ├── app/               # Landing page, /assessment wizard, /dashboard PAAS
+│   │   ├── components/        # UI primitives, assessment wizard & dashboard
+│   │   └── lib/               # Typed API client, Zustand store, types
+│   ├── docker-compose.yml     # Multi-container orchestration (Postgres + API + Web)
+│   └── README.md
+├── src/models/                # ML training + evaluation pipeline
+├── data_scripts/              # Data collection & feature engineering scripts
+├── docs/                      # Collection & cleaning evidence logs
+├── report/                    # LaTeX source, evaluation metrics, figures, final PDF
+├── survey/                    # Pakistani student survey specification
+├── models/weights/            # NOT in git — trained XGBoost model & LabelEncoder
 ├── data/                      # NOT in git, see "Getting the data"
 ├── requirements.txt
 └── .gitignore

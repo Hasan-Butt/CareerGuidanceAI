@@ -41,4 +41,6 @@ report/*.fdb_latexmk
 *.db-shm
 *.db-wal
 pakcareer/demo_keys.local.txt
+pakcareer/frontend/.next/
+pakcareer/frontend/node_modules/
 .env
