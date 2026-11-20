@@ -121,8 +121,8 @@ export function VocabStep() {
                   onClick={() => handleToggle(itemKey)}
                   className={`p-3.5 rounded-[20px] border text-left transition-all flex items-center justify-between cursor-pointer ${
                     isChecked
-                      ? "border-[#2b64ab] bg-blue-50/70 text-[#2b64ab] shadow-xs ring-1 ring-[#2b64ab]/30"
-                      : "border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/60"
+                      ? "border-[#2b64ab] bg-blue-50/80 text-[#2b64ab] shadow-sm ring-1 ring-[#2b64ab]/30 backdrop-blur-md"
+                      : "border-white/85 bg-white/70 backdrop-blur-md text-slate-700 hover:border-white hover:bg-white shadow-2xs"
                   }`}
                 >
                   <span className="font-bold text-xs sm:text-sm capitalize">
@@ -131,8 +131,8 @@ export function VocabStep() {
                   <div
                     className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${
                       isChecked
-                        ? "bg-[#2b64ab] border-[#2b64ab] text-white"
-                        : "border-slate-300 bg-white"
+                        ? "bg-[#2b64ab] border-[#2b64ab] text-white shadow-xs"
+                        : "border-white/90 bg-white/60"
                     }`}
                   >
                     {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}

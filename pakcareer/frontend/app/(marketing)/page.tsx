@@ -140,12 +140,12 @@ export default function MarketingLandingPage() {
               </div>
 
               {/* 3D Robot Image */}
-              <div className="relative w-full h-52 rounded-2xl overflow-hidden border border-white/50 shadow-md bg-white/10 my-2">
+              <div className="relative w-full h-52 flex items-center justify-center my-2">
                 <Image
                   src="/3d-robot-desk.png"
                   alt="AI Career Robot"
                   fill
-                  className="object-cover"
+                  className="object-contain drop-shadow-xl"
                   priority
                 />
               </div>

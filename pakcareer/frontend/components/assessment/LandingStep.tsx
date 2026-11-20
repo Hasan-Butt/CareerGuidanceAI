@@ -70,12 +70,12 @@ export function LandingStep() {
 
         {/* Studio-Quality 3D Robot Character Image */}
         <div className="relative my-3 flex items-center justify-center">
-          <div className="relative w-full max-w-[270px] h-[220px] rounded-[24px] overflow-hidden border border-white/50 shadow-xl bg-white/10 backdrop-blur-xs">
+          <div className="relative w-full max-w-[280px] h-[225px] flex items-center justify-center">
             <Image
               src="/3d-robot-desk.png"
               alt="3D Career AI Robot"
               fill
-              className="object-cover"
+              className="object-contain drop-shadow-xl"
               priority
             />
           </div>

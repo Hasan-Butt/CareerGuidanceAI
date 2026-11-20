@@ -65,8 +65,8 @@ export function TipiStep() {
                   key={itemKey}
                   className={`p-4 rounded-[22px] border transition-all ${
                     selectedValue !== undefined
-                      ? "border-blue-200 bg-blue-50/40 shadow-xs ring-1 ring-blue-300/40"
-                      : "border-slate-200/90 bg-white/85"
+                      ? "border-blue-200/80 bg-blue-50/60 shadow-xs ring-1 ring-blue-300/50 backdrop-blur-md"
+                      : "border-white/80 bg-white/70 backdrop-blur-md shadow-2xs"
                   }`}
                 >
                   <p className="text-xs sm:text-sm font-semibold text-[#0f2942] mb-3">
@@ -87,8 +87,8 @@ export function TipiStep() {
                           onClick={() => setTipi(itemKey, scale.val)}
                           className={`py-2 px-1 rounded-[14px] text-xs font-bold border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
                             isChosen
-                              ? "bg-[#2b64ab] text-white border-[#2b64ab] shadow-md shadow-blue-900/15"
-                              : "bg-white/90 text-slate-700 border-slate-200/90 hover:border-slate-300 hover:bg-slate-50"
+                              ? "bg-[#2b64ab] text-white border-[#2b64ab] shadow-md shadow-blue-900/20"
+                              : "bg-white/80 backdrop-blur-sm text-slate-700 border-white/90 hover:bg-white shadow-2xs"
                           }`}
                         >
                           <span className="font-extrabold text-sm sm:text-base">

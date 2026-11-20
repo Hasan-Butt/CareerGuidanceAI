@@ -89,7 +89,7 @@ const HOUSE_DESCRIPTIONS: Record<string, { desc: string; degrees: string[]; care
     careers: ["Research Scientist", "Biostatistician", "Actuary", "Lab Director"],
     company: "PAEC / PCSIR",
     logoText: "S",
-    logoBg: "bg-teal-50 text-teal-700 border-teal-200",
+    logoBg: "bg-cyan-50 text-cyan-700 border-cyan-200",
   },
   "Law": {
     desc: "Advocate constitutional law, enterprise compliance, international trade agreements, dispute resolution, and judiciary reform.",
@@ -463,7 +463,7 @@ export function ResultsStep() {
                     <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
                       <div className="flex -space-x-1.5 overflow-hidden">
                         <div className="inline-block h-4 w-4 rounded-full ring-2 ring-white bg-blue-400" />
-                        <div className="inline-block h-4 w-4 rounded-full ring-2 ring-white bg-teal-400" />
+                        <div className="inline-block h-4 w-4 rounded-full ring-2 ring-white bg-sky-400" />
                         <div className="inline-block h-4 w-4 rounded-full ring-2 ring-white bg-amber-400" />
                       </div>
                       <span>

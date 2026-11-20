@@ -171,9 +171,9 @@ export const HOUSE_EMOJIS: Record<string, string> = {
 
 // Brand colours (matches tailwind.config.ts)
 export const BRAND = {
-  primary: "#0f766e",
-  dark: "#0f2f38",
-  light: "#ccfbf1",
-  accent: "#c45c26",
+  primary: "#2b64ab",
+  dark: "#0f2942",
+  light: "#e3effa",
+  accent: "#2b64ab",
 } as const;
 

@@ -61,10 +61,10 @@ export function AboutStep() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 py-6 px-2 sm:px-0">
-      <Card>
+      <Card className="bg-white/75 backdrop-blur-2xl border-white/85 shadow-[0_16px_40px_-10px_rgba(20,50,90,0.16)]">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#2b64ab] bg-blue-50 px-3 py-1 rounded-full border border-blue-200/60 shadow-2xs">
+            <span className="text-xs font-bold text-[#2b64ab] bg-blue-50/80 px-3.5 py-1 rounded-full border border-blue-200/60 shadow-2xs">
               Context Calibration
             </span>
           </div>
@@ -78,7 +78,7 @@ export function AboutStep() {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <Label htmlFor="age" className="font-bold text-slate-800">Age</Label>
-              <span className="text-sm font-extrabold text-[#2b64ab] bg-blue-50 px-3 py-0.5 rounded-full border border-blue-200/60">
+              <span className="text-sm font-extrabold text-[#2b64ab] bg-blue-50/80 px-3.5 py-1 rounded-full border border-blue-200/60 shadow-2xs">
                 {age} years old
               </span>
             </div>
@@ -89,9 +89,9 @@ export function AboutStep() {
               max={35}
               value={age}
               onChange={(e) => setAge(Number(e.target.value))}
-              className="w-full accent-[#2b64ab] cursor-pointer"
+              className="w-full h-2 bg-white/60 rounded-lg appearance-none cursor-pointer accent-[#2b64ab]"
             />
-            <div className="flex justify-between text-xs text-slate-400 font-medium">
+            <div className="flex justify-between text-xs text-slate-500 font-semibold px-1">
               <span>13</span>
               <span>18</span>
               <span>25</span>
@@ -108,7 +108,7 @@ export function AboutStep() {
               id="education"
               value={education}
               onChange={(e) => setEducation(e.target.value)}
-              className="w-full h-11 px-4 py-2 text-sm rounded-[18px] border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#2b64ab] shadow-2xs cursor-pointer font-medium"
+              className="w-full h-12 px-4 py-2 text-sm rounded-[20px] border border-white/80 bg-white/80 backdrop-blur-md text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#2b64ab] shadow-2xs cursor-pointer font-semibold"
             >
               {EDUCATION_OPTIONS.map((opt) => (
                 <option key={opt} value={opt}>
@@ -122,7 +122,7 @@ export function AboutStep() {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <Label htmlFor="familysize" className="font-bold text-slate-800">Family Size (Household Members)</Label>
-              <span className="text-sm font-extrabold text-[#2b64ab] bg-blue-50 px-3 py-0.5 rounded-full border border-blue-200/60">
+              <span className="text-sm font-extrabold text-[#2b64ab] bg-blue-50/80 px-3.5 py-1 rounded-full border border-blue-200/60 shadow-2xs">
                 {familysize} persons
               </span>
             </div>
@@ -133,9 +133,9 @@ export function AboutStep() {
               max={15}
               value={familysize}
               onChange={(e) => setFamilysize(Number(e.target.value))}
-              className="w-full accent-[#2b64ab] cursor-pointer"
+              className="w-full h-2 bg-white/60 rounded-lg appearance-none cursor-pointer accent-[#2b64ab]"
             />
-            <div className="flex justify-between text-xs text-slate-400 font-medium">
+            <div className="flex justify-between text-xs text-slate-500 font-semibold px-1">
               <span>1</span>
               <span>5</span>
               <span>10</span>
@@ -152,10 +152,10 @@ export function AboutStep() {
                   key={u}
                   type="button"
                   onClick={() => setUrbanLabel(u)}
-                  className={`py-3 px-3 rounded-[18px] border text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${
+                  className={`py-3 px-3 rounded-[20px] border text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${
                     urbanLabel === u
-                      ? "border-[#2b64ab] bg-blue-50/80 text-[#2b64ab] shadow-xs ring-1 ring-[#2b64ab]/30"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      ? "border-[#2b64ab] bg-[#2b64ab] text-white shadow-md shadow-blue-900/20"
+                      : "border-white/85 bg-white/70 hover:bg-white text-slate-700 shadow-2xs"
                   }`}
                 >
                   {u}
@@ -176,10 +176,10 @@ export function AboutStep() {
                   key={opt.val}
                   type="button"
                   onClick={() => setEngnatLabel(opt.val)}
-                  className={`py-3 px-3 rounded-[18px] border text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${
+                  className={`py-3 px-3 rounded-[20px] border text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${
                     engnatLabel === opt.val
-                      ? "border-[#2b64ab] bg-blue-50/80 text-[#2b64ab] shadow-xs ring-1 ring-[#2b64ab]/30"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      ? "border-[#2b64ab] bg-[#2b64ab] text-white shadow-md shadow-blue-900/20"
+                      : "border-white/85 bg-white/70 hover:bg-white text-slate-700 shadow-2xs"
                   }`}
                 >
                   {opt.label}
@@ -189,7 +189,7 @@ export function AboutStep() {
           </div>
 
           {/* Invite Code */}
-          <div className="space-y-2 pt-2 border-t border-slate-100">
+          <div className="space-y-2 pt-2 border-t border-white/60">
             <Label htmlFor="invite" className="font-bold text-slate-800">
               Counsellor / School Invite Code (Optional)
             </Label>
@@ -201,10 +201,10 @@ export function AboutStep() {
                 setInviteCode(e.target.value);
                 setInviteError(null);
               }}
-              className="uppercase font-mono rounded-[16px] h-11"
+              className="uppercase font-mono font-bold tracking-wider rounded-[20px] h-12"
               aria-invalid={!!inviteError}
             />
-            {inviteError && <p className="text-sm text-red-600">{inviteError}</p>}
+            {inviteError && <p className="text-sm text-red-600 font-medium">{inviteError}</p>}
           </div>
 
           <NavButtons

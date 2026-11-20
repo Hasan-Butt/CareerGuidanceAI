@@ -181,7 +181,7 @@ export function FollowupStep() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 py-6 px-2 sm:px-0">
-      <div className="bg-white/85 backdrop-blur-xl border border-white/80 rounded-[32px] overflow-hidden shadow-[0_18px_45px_-10px_rgba(20,50,90,0.15)]">
+      <div className="bg-white/75 backdrop-blur-2xl border border-white/85 rounded-[32px] overflow-hidden shadow-[0_18px_45px_-10px_rgba(20,50,90,0.16)]">
         {/* Header Area */}
         <div className="p-6 sm:p-8 border-b border-slate-100 bg-white/40 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -242,15 +242,15 @@ export function FollowupStep() {
                         onClick={() => handleSelectOption(q.id, opt.key)}
                         className={`p-3.5 rounded-[20px] border text-left transition-all flex items-start gap-3 cursor-pointer ${
                           isSelected
-                            ? "border-[#2b64ab] bg-blue-50/80 shadow-xs ring-2 ring-[#2b64ab]/30"
-                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70 text-slate-700"
+                            ? "border-[#2b64ab] bg-blue-50/80 shadow-xs ring-2 ring-[#2b64ab]/30 backdrop-blur-md"
+                            : "border-white/85 bg-white/70 hover:border-white hover:bg-white text-slate-800 shadow-2xs backdrop-blur-md"
                         }`}
                       >
                         <div
                           className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5 transition-all ${
                             isSelected
                               ? "bg-[#2b64ab] text-white"
-                              : "border border-slate-300 text-slate-500 bg-white"
+                              : "border border-white/90 text-slate-600 bg-white/60"
                           }`}
                         >
                           {opt.key}

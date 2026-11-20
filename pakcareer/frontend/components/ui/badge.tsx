@@ -13,13 +13,13 @@ function Badge({
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors",
+        "inline-flex items-center rounded-full px-3 py-1 text-xs font-bold transition-colors shadow-2xs backdrop-blur-md",
         {
-          "bg-[#0f766e] text-white": variant === "default",
-          "bg-teal-50 text-teal-800 border border-teal-200": variant === "secondary",
-          "border border-slate-200 text-slate-800": variant === "outline",
-          "bg-[#c45c26]/10 text-[#c45c26] border border-[#c45c26]/20": variant === "accent",
-          "bg-emerald-50 text-emerald-800 border border-emerald-200": variant === "success",
+          "bg-[#2b64ab] text-white shadow-blue-900/15": variant === "default",
+          "bg-white/70 text-[#2b64ab] border border-white/90": variant === "secondary",
+          "border border-white/80 bg-white/60 text-slate-800": variant === "outline",
+          "bg-blue-100/70 text-[#2b64ab] border border-blue-200/60": variant === "accent",
+          "bg-emerald-50/90 text-emerald-800 border border-emerald-200": variant === "success",
         },
         className
       )}
@@ -29,4 +29,3 @@ function Badge({
 }
 
 export { Badge };
-
