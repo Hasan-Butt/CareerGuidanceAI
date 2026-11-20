@@ -36,7 +36,6 @@ export function VocabStep() {
     setLoading(true);
 
     try {
-      // Build full 16 vocab object (defaults to false if unselected)
       const fullVocab: Record<string, boolean> = {};
       VCL_KEYS.forEach((k) => {
         fullVocab[k] = !!vocab[k];
@@ -48,7 +47,7 @@ export function VocabStep() {
         vocab_checked: fullVocab,
         age: about.age || 18,
         education: about.education || EDUCATION_OPTIONS[1],
-        familysize: about.familysize ?? 5,   // 0 is a valid answer
+        familysize: about.familysize ?? 5,
         urban_label: about.urban_label || "Urban",
         engnat_label: about.engnat_label || "No",
         invite_code: about.invite_code || null,
@@ -56,7 +55,6 @@ export function VocabStep() {
 
       const res = await fetchPredict(payload);
 
-      // Store base XGBoost results
       setResults({
         sessionId: res.session_id,
         top3: res.top3,
@@ -65,7 +63,6 @@ export function VocabStep() {
       });
       setXgbResult(res);
 
-      // Transition to Stage 1 Follow-up
       setStep("followup");
       router.push("/assessment/followup");
     } catch (err: unknown) {
@@ -86,18 +83,18 @@ export function VocabStep() {
   const checkedCount = Object.values(vocab).filter(Boolean).length;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 py-6">
+    <div className="max-w-3xl mx-auto space-y-6 py-6 px-2 sm:px-0">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#0f766e]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#2b64ab] bg-blue-50 px-3 py-1 rounded-full border border-blue-200/60 shadow-2xs">
               Vocabulary & Language Familiarity
             </span>
-            <span className="text-xs font-bold text-[#0f766e]">
+            <span className="text-xs font-bold text-slate-600 bg-white/70 px-2.5 py-1 rounded-full border border-white">
               {checkedCount} / 16 words recognized
             </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-[#0f2f38]">
+          <CardTitle className="text-2xl font-extrabold text-[#0f2942] pt-2">
             Which of these words do you recognize?
           </CardTitle>
           <CardDescription>
@@ -106,7 +103,7 @@ export function VocabStep() {
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
-            <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-center gap-3 text-sm">
+            <div className="p-4 rounded-2xl bg-red-50/80 border border-red-200 text-red-700 flex items-center gap-3 text-sm">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -122,19 +119,19 @@ export function VocabStep() {
                   key={itemKey}
                   type="button"
                   onClick={() => handleToggle(itemKey)}
-                  className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer ${
+                  className={`p-3.5 rounded-[20px] border text-left transition-all flex items-center justify-between cursor-pointer ${
                     isChecked
-                      ? "border-[#0f766e] bg-teal-50/40 text-[#0f766e] shadow-xs"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                      ? "border-[#2b64ab] bg-blue-50/70 text-[#2b64ab] shadow-xs ring-1 ring-[#2b64ab]/30"
+                      : "border-slate-200/90 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/60"
                   }`}
                 >
-                  <span className="font-semibold text-sm capitalize">
+                  <span className="font-bold text-xs sm:text-sm capitalize">
                     {word}
                   </span>
                   <div
-                    className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+                    className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${
                       isChecked
-                        ? "bg-[#0f766e] border-[#0f766e] text-white"
+                        ? "bg-[#2b64ab] border-[#2b64ab] text-white"
                         : "border-slate-300 bg-white"
                     }`}
                   >

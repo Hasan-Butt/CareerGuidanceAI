@@ -25,7 +25,6 @@ export function AboutStep() {
 
   const handleNext = async () => {
     const code = inviteCode.trim().toUpperCase();
-    // Check the invite code now, not after the student has answered 70 questions.
     if (code) {
       setCheckingCode(true);
       setInviteError(null);
@@ -49,7 +48,6 @@ export function AboutStep() {
       familysize,
       urban_label: urbanLabel,
       engnat_label: engnatLabel,
-      // "" (not undefined) so clearing a code from the landing page sticks
       invite_code: code,
     });
     setStep("riasec");
@@ -62,10 +60,15 @@ export function AboutStep() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 py-6">
+    <div className="max-w-2xl mx-auto space-y-6 py-6 px-2 sm:px-0">
       <Card>
         <CardHeader>
-          <CardTitle>About You</CardTitle>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#2b64ab] bg-blue-50 px-3 py-1 rounded-full border border-blue-200/60 shadow-2xs">
+              Context Calibration
+            </span>
+          </div>
+          <CardTitle className="text-2xl font-extrabold text-[#0f2942] pt-2">About You</CardTitle>
           <CardDescription>
             These demographic factors allow our XGBoost model to contextualize your responses against benchmark cohorts in Pakistan.
           </CardDescription>
@@ -74,8 +77,10 @@ export function AboutStep() {
           {/* Age */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label htmlFor="age">Age</Label>
-              <span className="text-sm font-bold text-[#0f766e]">{age} years old</span>
+              <Label htmlFor="age" className="font-bold text-slate-800">Age</Label>
+              <span className="text-sm font-extrabold text-[#2b64ab] bg-blue-50 px-3 py-0.5 rounded-full border border-blue-200/60">
+                {age} years old
+              </span>
             </div>
             <input
               id="age"
@@ -84,9 +89,9 @@ export function AboutStep() {
               max={35}
               value={age}
               onChange={(e) => setAge(Number(e.target.value))}
-              className="w-full accent-[#0f766e] cursor-pointer"
+              className="w-full accent-[#2b64ab] cursor-pointer"
             />
-            <div className="flex justify-between text-xs text-slate-400">
+            <div className="flex justify-between text-xs text-slate-400 font-medium">
               <span>13</span>
               <span>18</span>
               <span>25</span>
@@ -96,12 +101,14 @@ export function AboutStep() {
 
           {/* Education */}
           <div className="space-y-2">
-            <Label htmlFor="education">Highest Education Completed / Current Level</Label>
+            <Label htmlFor="education" className="font-bold text-slate-800">
+              Highest Education Completed / Current Level
+            </Label>
             <select
               id="education"
               value={education}
               onChange={(e) => setEducation(e.target.value)}
-              className="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0f766e] cursor-pointer"
+              className="w-full h-11 px-4 py-2 text-sm rounded-[18px] border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#2b64ab] shadow-2xs cursor-pointer font-medium"
             >
               {EDUCATION_OPTIONS.map((opt) => (
                 <option key={opt} value={opt}>
@@ -114,8 +121,10 @@ export function AboutStep() {
           {/* Family Size */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label htmlFor="familysize">Family Size (Household Members)</Label>
-              <span className="text-sm font-bold text-[#0f766e]">{familysize} persons</span>
+              <Label htmlFor="familysize" className="font-bold text-slate-800">Family Size (Household Members)</Label>
+              <span className="text-sm font-extrabold text-[#2b64ab] bg-blue-50 px-3 py-0.5 rounded-full border border-blue-200/60">
+                {familysize} persons
+              </span>
             </div>
             <input
               id="familysize"
@@ -124,9 +133,9 @@ export function AboutStep() {
               max={15}
               value={familysize}
               onChange={(e) => setFamilysize(Number(e.target.value))}
-              className="w-full accent-[#0f766e] cursor-pointer"
+              className="w-full accent-[#2b64ab] cursor-pointer"
             />
-            <div className="flex justify-between text-xs text-slate-400">
+            <div className="flex justify-between text-xs text-slate-400 font-medium">
               <span>1</span>
               <span>5</span>
               <span>10</span>
@@ -136,16 +145,16 @@ export function AboutStep() {
 
           {/* Urban / Suburban / Rural */}
           <div className="space-y-2">
-            <Label>Living Environment</Label>
+            <Label className="font-bold text-slate-800">Living Environment</Label>
             <div className="grid grid-cols-3 gap-3">
               {["Urban", "Suburban", "Rural"].map((u) => (
                 <button
                   key={u}
                   type="button"
                   onClick={() => setUrbanLabel(u)}
-                  className={`py-2.5 px-3 rounded-lg border text-sm font-semibold text-center transition-all cursor-pointer ${
+                  className={`py-3 px-3 rounded-[18px] border text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${
                     urbanLabel === u
-                      ? "border-[#0f766e] bg-teal-50 text-[#0f766e]"
+                      ? "border-[#2b64ab] bg-blue-50/80 text-[#2b64ab] shadow-xs ring-1 ring-[#2b64ab]/30"
                       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
@@ -157,7 +166,7 @@ export function AboutStep() {
 
           {/* English Native */}
           <div className="space-y-2">
-            <Label>Is English your primary native language at home?</Label>
+            <Label className="font-bold text-slate-800">Is English your primary native language at home?</Label>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "No (Urdu / Regional / Bilingual)", val: "No" },
@@ -167,9 +176,9 @@ export function AboutStep() {
                   key={opt.val}
                   type="button"
                   onClick={() => setEngnatLabel(opt.val)}
-                  className={`py-2.5 px-3 rounded-lg border text-xs sm:text-sm font-semibold text-center transition-all cursor-pointer ${
+                  className={`py-3 px-3 rounded-[18px] border text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${
                     engnatLabel === opt.val
-                      ? "border-[#0f766e] bg-teal-50 text-[#0f766e]"
+                      ? "border-[#2b64ab] bg-blue-50/80 text-[#2b64ab] shadow-xs ring-1 ring-[#2b64ab]/30"
                       : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                   }`}
                 >
@@ -181,7 +190,9 @@ export function AboutStep() {
 
           {/* Invite Code */}
           <div className="space-y-2 pt-2 border-t border-slate-100">
-            <Label htmlFor="invite">Counsellor / School Invite Code (Optional)</Label>
+            <Label htmlFor="invite" className="font-bold text-slate-800">
+              Counsellor / School Invite Code (Optional)
+            </Label>
             <Input
               id="invite"
               placeholder="e.g. FAST-LAHORE"
@@ -190,7 +201,7 @@ export function AboutStep() {
                 setInviteCode(e.target.value);
                 setInviteError(null);
               }}
-              className="uppercase font-mono"
+              className="uppercase font-mono rounded-[16px] h-11"
               aria-invalid={!!inviteError}
             />
             {inviteError && <p className="text-sm text-red-600">{inviteError}</p>}
@@ -207,4 +218,3 @@ export function AboutStep() {
     </div>
   );
 }
-

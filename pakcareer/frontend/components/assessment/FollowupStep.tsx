@@ -4,10 +4,8 @@ import React, { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAssessmentStore } from "@/lib/store";
 import { fetchFollowupQuestions, fetchGeminiEnrichment } from "@/lib/api";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, ArrowRight, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { Sparkles, ArrowRight, AlertCircle, Loader2, ArrowUpRight } from "lucide-react";
 
 export function FollowupStep() {
   const router = useRouter();
@@ -32,14 +30,12 @@ export function FollowupStep() {
   const [stage2Status, setStage2Status] = useState<string>("");
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // If user navigates directly without XGBoost results, redirect back to start
   useEffect(() => {
     if (!sessionId && (!allResults || allResults.length === 0)) {
       router.push("/assessment/landing");
     }
   }, [sessionId, allResults, router]);
 
-  // Stage 1: Load follow-up questions if not already fetched
   useEffect(() => {
     if (followupQuestions && followupQuestions.length > 0) return;
     if (!allResults || allResults.length === 0) return;
@@ -48,7 +44,6 @@ export function FollowupStep() {
     setLoadingQuestions(true);
     setFetchError(null);
 
-    // Identify weak / ambiguous domains (e.g. top 2-3 houses with close probabilities, or close differences)
     const sorted = [...allResults].sort((a, b) => b.probability - a.probability);
     const weakDomains: string[] = [];
     if (sorted.length >= 2) {
@@ -108,7 +103,7 @@ export function FollowupStep() {
     if (!isAllAnswered) return;
 
     setSubmittingStage2(true);
-    setStage2Status("Connecting to Gemini 2.5 Flash...");
+    setStage2Status("Connecting to Gemini AI layer...");
     setFetchError(null);
 
     try {
@@ -135,7 +130,6 @@ export function FollowupStep() {
       });
     } catch (err: unknown) {
       console.error("Stage 2 validation failed:", err);
-      // Fallback: Proceed to results anyway so student is not blocked
       setStep("results");
       router.push(`/assessment/results?session=${sessionId || ""}`);
     } finally {
@@ -145,19 +139,19 @@ export function FollowupStep() {
 
   if (loadingQuestions) {
     return (
-      <div className="max-w-2xl mx-auto py-16 px-4 text-center space-y-6">
-        <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center mx-auto shadow-sm">
-          <Loader2 className="w-8 h-8 text-[#0f766e] animate-spin" />
+      <div className="max-w-md mx-auto py-20 px-4 text-center space-y-5">
+        <div className="w-16 h-16 rounded-3xl bg-white/70 backdrop-blur-md border border-white/80 flex items-center justify-center mx-auto shadow-md">
+          <Loader2 className="w-8 h-8 text-[#2b64ab] animate-spin" />
         </div>
-        <div className="space-y-2">
-          <Badge variant="outline" className="text-teal-700 bg-teal-50 border-teal-200 gap-1.5 py-1 px-3">
-            <Sparkles className="w-3.5 h-3.5 text-teal-600" /> Stage 1: AI Diagnostic Layer
-          </Badge>
-          <h2 className="text-2xl font-extrabold text-[#0f2f38]">
-            Analyzing Your Psychometric Profile
+        <div className="space-y-1.5">
+          <span className="text-xs font-bold text-white bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30 inline-flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Stage 1: AI Diagnostic Layer
+          </span>
+          <h2 className="text-2xl font-extrabold text-white drop-shadow-xs">
+            Evaluating Your Profile
           </h2>
-          <p className="text-sm text-slate-600 max-w-md mx-auto">
-            Gemini is evaluating your borderline scores and preparing 3–5 targeted questions to fine-tune your degree match recommendations...
+          <p className="text-xs text-white/85 max-w-xs mx-auto">
+            Preparing 3–5 targeted questions to fine-tune your degree match recommendations...
           </p>
         </div>
       </div>
@@ -166,22 +160,19 @@ export function FollowupStep() {
 
   if (submittingStage2) {
     return (
-      <div className="max-w-2xl mx-auto py-16 px-4 text-center space-y-6">
-        <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
+      <div className="max-w-md mx-auto py-20 px-4 text-center space-y-5">
+        <div className="w-16 h-16 rounded-3xl bg-white/70 backdrop-blur-md border border-white/80 flex items-center justify-center mx-auto shadow-md">
           <Sparkles className="w-8 h-8 text-amber-600 animate-pulse" />
         </div>
-        <div className="space-y-2">
-          <Badge variant="outline" className="text-amber-800 bg-amber-50 border-amber-200 gap-1.5 py-1 px-3">
+        <div className="space-y-1.5">
+          <span className="text-xs font-bold text-white bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30 inline-flex items-center gap-1.5">
             Stage 2: Live Market Grounding
-          </Badge>
-          <h2 className="text-2xl font-extrabold text-[#0f2f38]">
-            Validating Against Pakistan&apos;s Job Market
+          </span>
+          <h2 className="text-2xl font-extrabold text-white drop-shadow-xs">
+            Validating Job Market Demand
           </h2>
-          <p className="text-sm text-slate-600 max-w-md mx-auto font-medium text-teal-800">
+          <p className="text-xs font-medium text-white/90 max-w-xs mx-auto">
             {stage2Status || "Enriching your profile with real-time industry insights..."}
-          </p>
-          <p className="text-xs text-slate-400 pt-2">
-            Verifying Rozee.pk salary benchmarks and hiring trends...
           </p>
         </div>
       </div>
@@ -189,41 +180,41 @@ export function FollowupStep() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 py-6">
-      <Card className="border-teal-200 shadow-sm overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-teal-900 via-[#0f2f38] to-slate-900 text-white">
+    <div className="max-w-3xl mx-auto space-y-6 py-6 px-2 sm:px-0">
+      <div className="bg-white/85 backdrop-blur-xl border border-white/80 rounded-[32px] overflow-hidden shadow-[0_18px_45px_-10px_rgba(20,50,90,0.15)]">
+        {/* Header Area */}
+        <div className="p-6 sm:p-8 border-b border-slate-100 bg-white/40 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Badge variant="accent" className="gap-1.5 text-xs py-1 px-2.5">
+            <span className="text-xs font-bold text-[#2b64ab] bg-blue-50 border border-blue-200/60 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-2xs">
               <Sparkles className="w-3.5 h-3.5" /> Stage 1 Diagnostic
-            </Badge>
-            <span className="text-xs text-teal-200 font-mono">
+            </span>
+            <span className="text-xs font-mono font-bold text-slate-500 bg-white/80 px-2.5 py-0.5 rounded-full border border-slate-200">
               {answeredCount} of {questions.length} answered
             </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-white pt-2">
-            Targeted Follow-Up Questions
-          </CardTitle>
-          <CardDescription className="text-slate-300 text-sm">
-            Your psychometric scores show close competition between top degree fields.
-            Please answer these quick scenario questions so Gemini AI can validate your profile against live Pakistani market demand.
-          </CardDescription>
-        </CardHeader>
+          <h2 className="text-2xl font-extrabold text-[#0f2942]">
+            Targeted Follow-Up Diagnostic
+          </h2>
+          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+            Your interests indicate close alignment across multiple fields. Answer these real-world scenarios so AI can calibrate your exact ranking.
+          </p>
+        </div>
 
-        <CardContent className="space-y-8 pt-6">
+        {/* Content & Questions */}
+        <div className="p-6 sm:p-8 space-y-8">
           {fetchError && (
-            <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between gap-3 text-sm">
+            <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-900 flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>{fetchError}</span>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
+              <button
+                type="button"
                 onClick={handleSkipOrProceedWithoutAI}
-                className="text-xs"
+                className="text-xs font-bold text-[#2b64ab] underline"
               >
                 Skip to Results
-              </Button>
+              </button>
             </div>
           )}
 
@@ -232,16 +223,16 @@ export function FollowupStep() {
 
             return (
               <div key={q.id} className="space-y-3 pb-6 border-b border-slate-100 last:border-0 last:pb-0">
-                <div className="flex items-start gap-2.5">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-[#0f766e] text-xs font-bold shrink-0 mt-0.5">
+                <div className="flex items-start gap-3">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#2b64ab] text-white text-xs font-extrabold shrink-0 mt-0.5 shadow-2xs">
                     {qIdx + 1}
                   </span>
-                  <h3 className="font-bold text-base text-[#0f2f38]">
+                  <h3 className="font-extrabold text-sm sm:text-base text-[#0f2942]">
                     {q.question}
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 pl-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 pl-9">
                   {q.options.map((opt) => {
                     const isSelected = selectedKey === opt.key;
                     return (
@@ -249,22 +240,22 @@ export function FollowupStep() {
                         key={opt.key}
                         type="button"
                         onClick={() => handleSelectOption(q.id, opt.key)}
-                        className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                        className={`p-3.5 rounded-[20px] border text-left transition-all flex items-start gap-3 cursor-pointer ${
                           isSelected
-                            ? "border-[#0f766e] bg-teal-50/60 shadow-xs ring-1 ring-[#0f766e]"
-                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700"
+                            ? "border-[#2b64ab] bg-blue-50/80 shadow-xs ring-2 ring-[#2b64ab]/30"
+                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70 text-slate-700"
                         }`}
                       >
                         <div
-                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 transition-all ${
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5 transition-all ${
                             isSelected
-                              ? "bg-[#0f766e] text-white"
+                              ? "bg-[#2b64ab] text-white"
                               : "border border-slate-300 text-slate-500 bg-white"
                           }`}
                         >
                           {opt.key}
                         </div>
-                        <div className="flex-1 text-xs leading-relaxed font-medium">
+                        <div className="flex-1 text-xs leading-relaxed font-semibold">
                           {opt.text}
                         </div>
                       </button>
@@ -275,27 +266,28 @@ export function FollowupStep() {
             );
           })}
 
-          <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-            <Button
-              variant="ghost"
+          {/* Action Row */}
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <button
+              type="button"
               onClick={handleSkipOrProceedWithoutAI}
-              className="text-xs text-slate-500 hover:text-slate-700"
+              className="text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
             >
-              Skip to Psychometric Results
-            </Button>
+              Skip to Results
+            </button>
 
-            <Button
+            <button
+              type="button"
               onClick={handleSubmit}
               disabled={!isAllAnswered || isPending}
-              className="gap-2 bg-[#0f766e] hover:bg-[#0d635c] text-white font-bold px-6"
+              className="rounded-full bg-[#2b64ab] hover:bg-[#1f4f8b] disabled:bg-slate-300 text-white px-7 py-3 font-bold text-xs sm:text-sm shadow-md shadow-blue-900/20 flex items-center gap-2 transition cursor-pointer"
             >
               <span>Validate & See Verified Results</span>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
-

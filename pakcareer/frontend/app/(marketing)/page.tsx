@@ -1,213 +1,359 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
+  ArrowUpRight,
+  Search,
+  SlidersHorizontal,
+  Heart,
+  MoreVertical,
+  Bell,
   Sparkles,
-  ArrowRight,
   Compass,
   Brain,
-  FileText,
-  School,
-  CheckCircle,
+  ShieldCheck,
+  CheckCircle2,
   Building2,
   TrendingUp,
 } from "lucide-react";
 
 export default function MarketingLandingPage() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
+    <div className="min-h-screen flex flex-col justify-between">
+      {/* Frosted Floating Glass Header */}
+      <header className="sticky top-4 z-40 px-4 max-w-5xl mx-auto w-full">
+        <div className="bg-white/60 backdrop-blur-xl border border-white/80 rounded-full px-5 py-3 shadow-lg shadow-blue-900/5 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
             <Image
               src="/logo.png"
               alt="PakCareer AI Logo"
-              width={40}
-              height={40}
-              className="w-10 h-10 rounded-xl object-cover shadow-xs border border-slate-200/60"
+              width={34}
+              height={34}
+              className="w-8 h-8 rounded-full object-cover shadow-xs border border-white/80"
               priority
             />
-            <div className="flex flex-col">
-              <span className="font-extrabold text-[#0f2f38] text-lg tracking-tight">
-                PakCareer <span className="text-[#0f766e]">AI</span>
-              </span>
-              <span className="text-[10px] text-slate-400 font-medium">
-                National Degree Guidance System
-              </span>
-            </div>
+            <span className="font-extrabold text-[#0f2942] text-base tracking-tight">
+              PakCareer <span className="text-[#2b64ab]">AI</span>
+            </span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="text-slate-600 text-xs sm:text-sm">
+              <button className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-700 bg-white/50 hover:bg-white/80 border border-white/60 transition cursor-pointer">
                 Counsellor Portal
-              </Button>
+              </button>
             </Link>
             <Link href="/assessment/landing">
-              <Button size="sm" className="gap-1.5 text-xs sm:text-sm">
-                Take Assessment
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
+              <button className="px-4 py-1.5 rounded-full text-xs font-bold text-white bg-[#2b64ab] hover:bg-[#1f4f8b] shadow-md shadow-blue-900/15 flex items-center gap-1.5 transition cursor-pointer">
+                <span>Take Assessment</span>
+                <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="py-16 sm:py-24 px-4 text-center max-w-4xl mx-auto space-y-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 border border-teal-200 text-[#0f766e] text-xs font-semibold shadow-xs">
-          <Sparkles className="w-3.5 h-3.5" />
-          Trained on 100,000+ Profiles · 86.5% Top-3 Precision
-        </div>
+      {/* Main Hero Container */}
+      <main className="max-w-6xl mx-auto px-4 py-8 sm:py-12 flex-1 w-full space-y-12 sm:space-y-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Left Column: Headline, search & CTA */}
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/40 backdrop-blur-md border border-white/60 text-[#2b64ab] text-xs font-bold shadow-xs">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>National Career Guidance PAAS · Calibrated for Pakistan</span>
+            </div>
 
-        <h1 className="text-4xl sm:text-6xl font-extrabold text-[#0f2f38] tracking-tight leading-[1.1]">
-          Stop guessing your university major.{" "}
-          <span className="text-[#0f766e]">Let data guide your future.</span>
-        </h1>
-
-        <p className="text-slate-600 text-base sm:text-xl max-w-2xl mx-auto leading-relaxed">
-          PakCareer AI is a scientifically grounded platform that analyzes your vocational interests and personality to match you with the right Pakistani university degree track.
-        </p>
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <Link href="/assessment/landing" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto gap-2 text-base px-8 py-6 shadow-md">
-              Start Free Student Assessment
-              <ArrowRight className="w-5 h-5" />
-            </Button>
-          </Link>
-          <Link href="/dashboard" className="w-full sm:w-auto">
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto gap-2 text-base px-8 py-6 border-slate-300"
-            >
-              <School className="w-4 h-4 text-[#0f766e]" />
-              Institutional Counsellor PAAS
-            </Button>
-          </Link>
-        </div>
-
-        <div className="flex items-center justify-center gap-6 pt-4 text-xs text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle className="w-4 h-4 text-emerald-600" /> 10-Minute Assessment
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle className="w-4 h-4 text-emerald-600" /> Downloadable PDF for Parents
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle className="w-4 h-4 text-emerald-600" /> Free & Confidential
-          </span>
-        </div>
-      </section>
-
-      {/* Metrics Banner */}
-      <section className="bg-white border-y border-slate-200 py-10 px-4">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          <div className="space-y-1">
-            <div className="text-3xl sm:text-4xl font-extrabold text-[#0f766e]">86.5%</div>
-            <div className="text-xs sm:text-sm font-semibold text-slate-700">Top-3 Validation Accuracy</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-3xl sm:text-4xl font-extrabold text-[#0f2f38]">7</div>
-            <div className="text-xs sm:text-sm font-semibold text-slate-700">Pakistani Degree Houses</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-3xl sm:text-4xl font-extrabold text-[#c45c26]">48+10</div>
-            <div className="text-xs sm:text-sm font-semibold text-slate-700">RIASEC & Big-5 Features</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-3xl sm:text-4xl font-extrabold text-[#0f766e]">10 min</div>
-            <div className="text-xs sm:text-sm font-semibold text-slate-700">Average Completion Time</div>
-          </div>
-        </div>
-      </section>
-
-      {/* How it Works */}
-      <section className="py-20 px-4 max-w-5xl mx-auto space-y-12">
-        <div className="text-center space-y-3">
-          <Badge variant="secondary" className="px-3 py-1 font-bold">
-            Methodology
-          </Badge>
-          <h2 className="text-3xl font-extrabold text-[#0f2f38]">How PakCareer AI Works</h2>
-          <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto">
-            Combining validated psychometric frameworks with production-grade gradient boosting machine learning.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="border-slate-200 shadow-xs">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-teal-50 text-[#0f766e] flex items-center justify-center font-bold">
-                <Compass className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-lg text-[#0f2f38]">1. Psychometric Profiling</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Complete 48 Holland RIASEC vocational interest items, 10 Big Five personality traits, and vocabulary fluency checks.
+            <div className="space-y-2">
+              <p className="text-white font-bold text-sm uppercase tracking-wider drop-shadow-xs">
+                Dream Degree & Career Found
               </p>
-            </CardContent>
-          </Card>
+              <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.12] drop-shadow-sm">
+                Hey, Discover Your <br />
+                <span className="text-[#0f2942]">New Career Matches</span>
+              </h1>
+            </div>
 
-          <Card className="border-slate-200 shadow-xs">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-amber-50 text-[#c45c26] flex items-center justify-center font-bold">
-                <Brain className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-lg text-[#0f2f38]">2. XGBoost Model Inference</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Our 88-feature classification pipeline compares your multi-factor profile against academic success patterns in Pakistan.
-              </p>
-            </CardContent>
-          </Card>
+            <p className="text-slate-800 text-sm sm:text-base font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Trained on 100,000+ student profiles. Match your Holland RIASEC interests and Big Five personality to 7 Pakistani university tracks with live job market validation.
+            </p>
 
-          <Card className="border-slate-200 shadow-xs">
-            <CardContent className="p-6 space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-teal-50 text-[#0f766e] flex items-center justify-center font-bold">
-                <FileText className="w-6 h-6" />
+            {/* Glassmorphic Search Bar (matching Middle Screen) */}
+            <div className="max-w-lg mx-auto lg:mx-0 bg-white/70 backdrop-blur-xl border border-white/80 rounded-full p-2 shadow-lg shadow-blue-900/10 flex items-center gap-2">
+              <div className="pl-3 text-slate-400">
+                <Search className="w-4 h-4" />
               </div>
-              <h3 className="font-bold text-lg text-[#0f2f38]">3. Actionable Reports</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Get probability rankings across 7 degree families, salary insights, and an official PDF summary ready to share with parents.
-              </p>
-            </CardContent>
-          </Card>
+              <input
+                type="text"
+                placeholder="Search Computer Science, Engineering, Business..."
+                className="flex-1 bg-transparent text-xs sm:text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none"
+                readOnly
+              />
+              <Link href="/assessment/landing">
+                <button className="w-9 h-9 rounded-full bg-[#2b64ab] hover:bg-[#1f4f8b] text-white flex items-center justify-center shadow-md transition cursor-pointer">
+                  <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                </button>
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+              <Link href="/assessment/landing">
+                <button className="bg-[#2b64ab] hover:bg-[#1f4f8b] text-white rounded-full py-4 px-8 font-bold text-sm sm:text-base shadow-xl shadow-blue-900/20 flex items-center gap-2 hover:scale-[1.02] transition cursor-pointer">
+                  <span>Start Career Assessment</span>
+                  <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
+                </button>
+              </Link>
+              <Link href="/dashboard">
+                <button className="bg-white/60 hover:bg-white/80 backdrop-blur-md text-slate-800 rounded-full py-4 px-6 font-bold text-sm sm:text-base border border-white/80 shadow-md transition cursor-pointer">
+                  Counsellor Portal
+                </button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Column: Hero Showcase Card with 3D Robot Illustration */}
+          <div className="lg:col-span-5 flex justify-center">
+            <div className="relative w-full max-w-sm rounded-[36px] overflow-hidden bg-gradient-to-b from-[#87a9ca] via-[#9bb9d4] to-[#bed3e8] border border-white/80 shadow-[0_24px_50px_-10px_rgba(20,50,90,0.3)] p-6 space-y-4">
+              <div className="flex items-center justify-between text-xs text-white/90 font-semibold">
+                <span className="font-mono text-sm">9:40 PM</span>
+                <span className="bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/40 text-[10px]">
+                  PAAS Mobile UI
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 pt-2">
+                <div className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-md border border-white/60 p-1 flex items-center justify-center shadow-md">
+                  <Image
+                    src="/search-badge.png"
+                    alt="Career Search"
+                    width={56}
+                    height={56}
+                    className="w-full h-full object-contain rounded-full"
+                  />
+                </div>
+                <div className="text-right">
+                  <span className="text-xs uppercase font-extrabold text-white/80 tracking-wider">
+                    PakCareer AI
+                  </span>
+                  <h3 className="text-xl font-extrabold text-white leading-tight">
+                    Start Your <br /> Career Now
+                  </h3>
+                </div>
+              </div>
+
+              {/* 3D Robot Image */}
+              <div className="relative w-full h-52 flex items-center justify-center my-2">
+                <Image
+                  src="/robot-desk.png"
+                  alt="AI Career Robot"
+                  fill
+                  className="object-contain drop-shadow-xl"
+                  priority
+                />
+              </div>
+
+              <Link href="/assessment/landing" className="block pt-2">
+                <button className="w-full bg-[#2b64ab] hover:bg-[#1f4f8b] text-white rounded-full py-3.5 px-6 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-900/25 transition cursor-pointer">
+                  <span>Get Started</span>
+                  <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                </button>
+              </Link>
+            </div>
+          </div>
         </div>
-      </section>
 
-      {/* Institutional CTA */}
-      <section className="bg-gradient-to-br from-[#0f2f38] to-teal-950 text-white py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
-          <Building2 className="w-12 h-12 text-teal-400 mx-auto" />
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Empower Your Entire School or University Cohort
-          </h2>
-          <p className="text-slate-300 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
-            Institutional career counsellors can track student assessments, analyze batch interest distributions, and generate cohort analytics via custom invite codes.
-          </p>
-          <div className="pt-2">
-            <Link href="/dashboard">
-              <Button size="lg" className="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-8 py-6">
-                Explore Counsellor Portal
-              </Button>
+        {/* Featured Degree Cards matching the Middle Screen */}
+        <section className="space-y-6 pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div>
+              <p className="text-white text-xs font-bold uppercase tracking-wider">
+                Explore Pakistani Degree Fields
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0f2942]">
+                Recommended Higher Education Tracks
+              </h2>
+            </div>
+            <Link href="/assessment/landing">
+              <span className="text-xs font-bold text-[#2b64ab] bg-white/60 hover:bg-white/80 px-4 py-2 rounded-full border border-white/80 inline-flex items-center gap-1 shadow-xs cursor-pointer">
+                Take Quiz to Match <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
             </Link>
           </div>
-        </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-8 px-4 text-center text-xs text-slate-500 mt-auto">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span>© 2026 PakCareer AI. All rights reserved.</span>
-          <div className="flex gap-4">
-            <Link href="/assessment/landing" className="hover:text-[#0f766e]">Student Assessment</Link>
-            <Link href="/dashboard" className="hover:text-[#0f766e]">Counsellor Dashboard</Link>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* Card 1: CS & IT */}
+            <div className="bg-white/85 backdrop-blur-xl border border-white/80 rounded-[28px] p-5 shadow-lg shadow-blue-900/5 space-y-4 hover:shadow-xl transition-all">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-blue-50 border border-blue-200/60 flex items-center justify-center text-lg shadow-xs">
+                    💻
+                  </div>
+                  <span className="font-extrabold text-sm text-[#0f2942]">Systems / FAST</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
+                    <Heart className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
+                    <MoreVertical className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-extrabold text-base text-[#0f2942] leading-snug">
+                  Computer Science & Software Development
+                </h3>
+                <div className="flex flex-wrap gap-1.5 pt-2">
+                  <span className="text-[10px] font-semibold text-slate-600 bg-white/80 border border-slate-200 px-2.5 py-1 rounded-full">
+                    BS CS / SE
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-600 bg-white/80 border border-slate-200 px-2.5 py-1 rounded-full">
+                    Full time
+                  </span>
+                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                    Top Salary
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <div>
+                  <span className="text-base font-extrabold text-[#2b64ab]">
+                    PKR 140k
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-500"> /Month</span>
+                  <div className="text-[10px] text-slate-400 font-medium">3,500+ Rozee openings</div>
+                </div>
+
+                <Link href="/assessment/landing">
+                  <button className="bg-[#2b64ab] hover:bg-[#1f4f8b] text-white rounded-full px-4 py-2 text-xs font-bold shadow-md shadow-blue-900/15 flex items-center gap-1 transition cursor-pointer">
+                    <span>See Details</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Card 2: Engineering */}
+            <div className="bg-white/85 backdrop-blur-xl border border-white/80 rounded-[28px] p-5 shadow-lg shadow-blue-900/5 space-y-4 hover:shadow-xl transition-all">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center text-lg shadow-xs">
+                    ⚙️
+                  </div>
+                  <span className="font-extrabold text-sm text-[#0f2942]">Engro / NUST</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
+                    <Heart className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
+                    <MoreVertical className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-extrabold text-base text-[#0f2f38] leading-snug">
+                  Mechanical, Electrical & Robotics Engineering
+                </h3>
+                <div className="flex flex-wrap gap-1.5 pt-2">
+                  <span className="text-[10px] font-semibold text-slate-600 bg-white/80 border border-slate-200 px-2.5 py-1 rounded-full">
+                    BSc Eng
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-600 bg-white/80 border border-slate-200 px-2.5 py-1 rounded-full">
+                    PEC Accredited
+                  </span>
+                  <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">
+                    Core Industry
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <div>
+                  <span className="text-base font-extrabold text-[#2b64ab]">
+                    PKR 110k
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-500"> /Month</span>
+                  <div className="text-[10px] text-slate-400 font-medium">2,800+ openings</div>
+                </div>
+
+                <Link href="/assessment/landing">
+                  <button className="bg-[#2b64ab] hover:bg-[#1f4f8b] text-white rounded-full px-4 py-2 text-xs font-bold shadow-md shadow-blue-900/15 flex items-center gap-1 transition cursor-pointer">
+                    <span>See Details</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Card 3: Business & Commerce */}
+            <div className="bg-white/85 backdrop-blur-xl border border-white/80 rounded-[28px] p-5 shadow-lg shadow-blue-900/5 space-y-4 hover:shadow-xl transition-all">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-200/60 flex items-center justify-center text-lg shadow-xs">
+                    📊
+                  </div>
+                  <span className="font-extrabold text-sm text-[#0f2942]">HBL / LUMS / IBA</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
+                    <Heart className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
+                    <MoreVertical className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-extrabold text-base text-[#0f2942] leading-snug">
+                  Corporate Finance, Fintech & BBA
+                </h3>
+                <div className="flex flex-wrap gap-1.5 pt-2">
+                  <span className="text-[10px] font-semibold text-slate-600 bg-white/80 border border-slate-200 px-2.5 py-1 rounded-full">
+                    BBA / ACF
+                  </span>
+                  <span className="text-[10px] font-semibold text-slate-600 bg-white/80 border border-slate-200 px-2.5 py-1 rounded-full">
+                    Fintech
+                  </span>
+                  <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                    High Growth
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                <div>
+                  <span className="text-base font-extrabold text-[#2b64ab]">
+                    PKR 125k
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-500"> /Month</span>
+                  <div className="text-[10px] text-slate-400 font-medium">4,000+ openings</div>
+                </div>
+
+                <Link href="/assessment/landing">
+                  <button className="bg-[#2b64ab] hover:bg-[#1f4f8b] text-white rounded-full px-4 py-2 text-xs font-bold shadow-md shadow-blue-900/15 flex items-center gap-1 transition cursor-pointer">
+                    <span>See Details</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Frosted Glass Footer */}
+      <footer className="mt-12 py-6 px-4 text-center text-xs text-slate-700 bg-white/40 backdrop-blur-md border-t border-white/60">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span className="font-medium">© 2026 PakCareer AI PAAS. All rights reserved.</span>
+          <div className="flex gap-4 font-bold text-[#2b64ab]">
+            <Link href="/assessment/landing" className="hover:underline">Student Assessment</Link>
+            <Link href="/dashboard" className="hover:underline">Counsellor Portal</Link>
           </div>
         </div>
       </footer>
     </div>
   );
 }
-

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 
 interface NavButtonsProps {
@@ -24,44 +23,41 @@ export function NavButtons({
   showBack = true,
 }: NavButtonsProps) {
   return (
-    <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-8">
+    <div className="flex items-center justify-between pt-6 border-t border-slate-100/80 mt-8">
       {showBack && onBack ? (
-        <Button
+        <button
           type="button"
-          variant="outline"
           onClick={onBack}
           disabled={loading}
-          className="gap-2"
+          className="rounded-full bg-white/70 hover:bg-white text-slate-700 border border-white/90 px-5 py-2.5 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition cursor-pointer disabled:opacity-50"
         >
           <ArrowLeft className="w-4 h-4" />
-          {backLabel}
-        </Button>
+          <span>{backLabel}</span>
+        </button>
       ) : (
         <div />
       )}
 
       {onNext && (
-        <Button
+        <button
           type="button"
-          variant="default"
           onClick={onNext}
           disabled={nextDisabled || loading}
-          className="gap-2 min-w-[140px]"
+          className="rounded-full bg-[#2b64ab] hover:bg-[#1f4f8b] disabled:bg-slate-300 disabled:shadow-none text-white px-7 py-2.5 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md shadow-blue-900/20 transition cursor-pointer min-w-[130px] justify-center"
         >
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Processing...
+              <span>Processing...</span>
             </>
           ) : (
             <>
-              {nextLabel}
-              <ArrowRight className="w-4 h-4" />
+              <span>{nextLabel}</span>
+              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </>
           )}
-        </Button>
+        </button>
       )}
     </div>
   );
 }
-

@@ -1,20 +1,68 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #a3c2dd;
+  --foreground: #0f2942;
+  --royal-blue: #2b64ab;
+  --royal-blue-hover: #1f4f8b;
 }
 
 @theme {
-  --color-brand-primary: #0f766e;
-  --color-brand-dark: #0f2f38;
-  --color-brand-light: #ccfbf1;
-  --color-brand-accent: #c45c26;
+  --color-brand-primary: #2b64ab;
+  --color-brand-dark: #0f2942;
+  --color-brand-light: #e3effa;
+  --color-brand-accent: #f59e0b;
 }
 
 body {
-  background: var(--background);
+  background: linear-gradient(180deg, #8baecf 0%, #a4c1db 30%, #c4d8ea 65%, #dbe8f4 100%);
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
+}
+
+/* Glassmorphism utility classes matching the mobile reference design */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 14px 38px -10px rgba(31, 64, 107, 0.14);
+}
+
+.glass-panel-subtle {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+}
+
+.glass-circle {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+}
+
+.btn-royal {
+  background-color: #2b64ab;
+  color: white;
+  border-radius: 9999px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 24px -4px rgba(43, 100, 171, 0.35);
+}
+
+.btn-royal:hover {
+  background-color: #1f4f8b;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px -4px rgba(43, 100, 171, 0.45);
 }
