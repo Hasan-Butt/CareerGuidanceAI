@@ -122,7 +122,6 @@ export function LandingStep() {
 
             <input
               type="text"
-              placeholder="e.g. FAST-LAHORE, NUST-ISB"
               value={inviteCode}
               onChange={(e) => {
                 setInviteCode(e.target.value);
