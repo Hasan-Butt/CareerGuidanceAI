@@ -84,20 +84,20 @@ export default function SessionDetailPage({ params }: PageProps) {
         <div className="space-y-1">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#0f766e] transition-colors mb-1"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#2b64ab] transition-colors mb-1"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Sessions</span>
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-extrabold text-[#0f2f38]">
+            <h1 className="text-2xl font-extrabold text-[#0f2942]">
               Session Details
             </h1>
             <Badge variant="outline" className="font-mono text-xs">
               {session.session_id.slice(0, 10)}
             </Badge>
             {session.org_code && (
-              <Badge variant="secondary" className="font-mono text-xs">
+              <Badge variant="secondary" className="font-mono text-xs bg-blue-50 text-[#2b64ab] border-blue-200">
                 {session.org_code}
               </Badge>
             )}
@@ -106,7 +106,7 @@ export default function SessionDetailPage({ params }: PageProps) {
 
         <div className="flex items-center gap-2">
           <a href={fetchPdfUrl(session.session_id)} target="_blank" rel="noreferrer">
-            <Button size="sm" className="gap-1.5">
+            <Button size="sm" className="gap-1.5 bg-[#2b64ab] hover:bg-[#1f4f8b] text-white rounded-full font-bold">
               <Download className="w-4 h-4" />
               Download Parents Report PDF
             </Button>
@@ -117,10 +117,10 @@ export default function SessionDetailPage({ params }: PageProps) {
       {/* Demographics & Match Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left: Demographics Card */}
-        <Card className="border-slate-200">
+        <Card className="bg-white/75 backdrop-blur-xl border-white/85 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base font-bold text-[#0f2f38] flex items-center gap-2">
-              <User className="w-4 h-4 text-[#0f766e]" />
+            <CardTitle className="text-base font-extrabold text-[#0f2942] flex items-center gap-2">
+              <User className="w-4 h-4 text-[#2b64ab]" />
               Student Background
             </CardTitle>
           </CardHeader>
@@ -157,10 +157,10 @@ export default function SessionDetailPage({ params }: PageProps) {
         </Card>
 
         {/* Right 2 cols: Prediction Matches */}
-        <Card className="border-slate-200 md:col-span-2">
+        <Card className="bg-white/75 backdrop-blur-xl border-white/85 shadow-sm md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base font-bold text-[#0f2f38] flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#0f766e]" />
+            <CardTitle className="text-base font-extrabold text-[#0f2942] flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#2b64ab]" />
               Predicted Degree Families (Top Matches)
             </CardTitle>
           </CardHeader>
@@ -169,15 +169,15 @@ export default function SessionDetailPage({ params }: PageProps) {
               {session.top3?.map((m, idx) => (
                 <div
                   key={m.house}
-                  className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
+                  className={`p-3.5 rounded-2xl border text-xs space-y-1.5 ${
                     idx === 0
-                      ? "bg-teal-50/50 border-teal-300"
-                      : "bg-white border-slate-200"
+                      ? "bg-blue-50/80 border-blue-200 text-[#2b64ab] shadow-xs"
+                      : "bg-white/70 border-white/80"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xl">{m.emoji}</span>
-                    <Badge variant={idx === 0 ? "default" : "outline"} className="text-[10px]">
+                    <Badge variant={idx === 0 ? "default" : "outline"} className={`text-[10px] ${idx === 0 ? "bg-[#2b64ab] text-white" : ""}`}>
                       #{idx + 1}
                     </Badge>
                   </div>
@@ -224,17 +224,17 @@ export default function SessionDetailPage({ params }: PageProps) {
 
       {/* Psychometric Scores & RIASEC Detail */}
       {session.profile && (
-        <Card className="border-slate-200">
+        <Card className="bg-white/75 backdrop-blur-xl border-white/85 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base font-bold text-[#0f2f38]">
+            <CardTitle className="text-base font-extrabold text-[#0f2942]">
               Holland RIASEC Domain Scores (1.0 – 5.0)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
               {Object.entries(session.profile.riasec || {}).map(([dim, score]) => (
-                <div key={dim} className="p-3 rounded-lg border border-slate-100 text-center bg-slate-50/50">
-                  <div className="font-mono text-sm font-bold text-[#0f766e]">{dim}</div>
+                <div key={dim} className="p-3 rounded-2xl border border-white/80 text-center bg-white/60">
+                  <div className="font-mono text-sm font-bold text-[#2b64ab]">{dim}</div>
                   <div className="text-lg font-extrabold text-slate-900">{score.toFixed(2)}</div>
                   <div className="text-[10px] text-slate-400 capitalize">
                     {dim === "R" && "Realistic"}
@@ -252,11 +252,11 @@ export default function SessionDetailPage({ params }: PageProps) {
       )}
 
       {/* Counsellor Notes (Auto-save or on blur) */}
-      <Card className="border-slate-200">
+      <Card className="bg-white/75 backdrop-blur-xl border-white/85 shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base font-bold text-[#0f2f38]">
+              <CardTitle className="text-base font-extrabold text-[#0f2942]">
                 Confidential Counsellor Notes
               </CardTitle>
               <CardDescription className="text-xs">
@@ -278,7 +278,7 @@ export default function SessionDetailPage({ params }: PageProps) {
             onBlur={handleSaveNotes}
             placeholder="Record advising remarks, recommended university choices, parent meeting notes, or follow-up action items..."
             rows={4}
-            className="w-full p-3 rounded-lg border border-slate-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f766e] focus:border-transparent transition-all"
+            className="w-full p-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2b64ab] focus:border-transparent transition-all"
           />
           <div className="flex justify-end">
             <Button

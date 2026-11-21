@@ -41,6 +41,12 @@ export function VocabStep() {
         fullVocab[k] = !!vocab[k];
       });
 
+      if (!about.invite_code) {
+        setError("A verified school or counsellor invite code is required to take this assessment.");
+        setLoading(false);
+        return;
+      }
+
       const payload: AssessmentPayload = {
         riasec,
         tipi,
@@ -50,7 +56,7 @@ export function VocabStep() {
         familysize: about.familysize ?? 5,
         urban_label: about.urban_label || "Urban",
         engnat_label: about.engnat_label || "No",
-        invite_code: about.invite_code || null,
+        invite_code: about.invite_code,
       };
 
       const res = await fetchPredict(payload);

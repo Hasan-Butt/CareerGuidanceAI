@@ -4,20 +4,46 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAssessmentStore } from "@/lib/store";
-import { ArrowUpRight, Shield, Award } from "lucide-react";
+import { ArrowUpRight, Shield, Award, KeyRound, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { fetchOrg } from "@/lib/api";
 
 export function LandingStep() {
   const router = useRouter();
   const { about, setAbout, setStep } = useAssessmentStore();
   const [inviteCode, setInviteCode] = useState(about.invite_code || "");
-  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verifiedName, setVerifiedName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleStart = () => {
-    if (inviteCode.trim()) {
-      setAbout({ invite_code: inviteCode.trim().toUpperCase() });
+  const handleStart = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const code = inviteCode.trim().toUpperCase();
+
+    if (!code) {
+      setError("An invite code is required. Please enter the code given by your school or counsellor.");
+      return;
     }
-    setStep("about");
-    router.push("/assessment/about");
+
+    setVerifying(true);
+    setError(null);
+
+    try {
+      const org = await fetchOrg(code);
+      setVerifiedName(org.name);
+      setAbout({ invite_code: code });
+      setStep("about");
+      router.push("/assessment/about");
+    } catch (err: unknown) {
+      const status = (err as { status?: number }).status;
+      setVerifiedName(null);
+      if (status === 404) {
+        setError(`"${code}" is not a valid invite code. You must enter a registered school or counsellor code to take this test.`);
+      } else {
+        setError("Unable to verify invite code. Please check that the server is running or contact support.");
+      }
+    } finally {
+      setVerifying(false);
+    }
   };
 
   return (
@@ -64,7 +90,7 @@ export function LandingStep() {
           </div>
 
           <p className="text-white/85 text-xs sm:text-sm font-medium leading-relaxed pt-2 text-right max-w-xs ml-auto">
-            Scientifically calibrated degree & career guidance powered by Holland RIASEC and XGBoost.
+            Calibrated degree & career guidance powered by Holland RIASEC and XGBoost.
           </p>
         </div>
 
@@ -81,51 +107,80 @@ export function LandingStep() {
           </div>
         </div>
 
-        {/* Action Controls & Invite Code */}
-        <div className="space-y-3 pt-2">
-          {showCodeInput ? (
-            <div className="bg-white/70 backdrop-blur-md rounded-2xl p-3 border border-white/80 space-y-1.5 shadow-sm">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
+        {/* Mandatory School / Counsellor Invite Code Guard */}
+        <form onSubmit={handleStart} className="space-y-3 pt-2">
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl p-3.5 border border-white/90 space-y-2 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-[#2b64ab]" />
                 School / Counsellor Code
               </span>
-              <input
-                type="text"
-                placeholder="e.g. FAST-LAHORE, LGS-DEMO"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value)}
-                className="w-full bg-white/90 border border-slate-200/80 rounded-xl px-3 py-2 text-xs font-mono font-bold text-[#0f2942] uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-[#2b64ab]"
-              />
+              <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                Required
+              </span>
             </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowCodeInput(true)}
-              className="text-[11px] text-white/80 hover:text-white font-medium text-center w-full underline decoration-white/40 cursor-pointer"
-            >
-              Have a school or counsellor code?
-            </button>
-          )}
 
-          {/* Primary Pill Button (Exact from image) */}
+            <input
+              type="text"
+              placeholder="e.g. FAST-LAHORE, NUST-ISB"
+              value={inviteCode}
+              onChange={(e) => {
+                setInviteCode(e.target.value);
+                setError(null);
+                setVerifiedName(null);
+              }}
+              disabled={verifying}
+              className="w-full bg-white border border-slate-200/90 rounded-xl px-3.5 py-2.5 text-xs font-mono font-extrabold text-[#0f2942] uppercase tracking-wider placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2b64ab]"
+            />
+
+            {error && (
+              <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] flex items-start gap-1.5 font-semibold leading-tight">
+                <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {verifiedName && (
+              <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] flex items-center gap-1.5 font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Verified: {verifiedName}</span>
+              </div>
+            )}
+
+            <p className="text-[10px] text-slate-500 font-medium leading-tight">
+              Access is restricted to registered partner cohorts. Enter the invite code provided by your school, university, or career counsellor.
+            </p>
+          </div>
+
+          {/* Primary Pill Button */}
           <button
-            type="button"
-            onClick={handleStart}
-            className="w-full bg-[#2b64ab] hover:bg-[#204e88] text-white rounded-full py-4 px-6 font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-blue-900/25 transition-all duration-200 hover:scale-[1.02] cursor-pointer"
+            type="submit"
+            disabled={verifying}
+            className="w-full bg-[#2b64ab] hover:bg-[#1f4f8b] disabled:bg-slate-400 text-white rounded-full py-4 px-6 font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-blue-900/25 transition-all duration-200 hover:scale-[1.01] cursor-pointer"
           >
-            <span>Get Started</span>
-            <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
+            {verifying ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Verifying Invite Code...</span>
+              </>
+            ) : (
+              <>
+                <span>Start Assessment</span>
+                <ArrowUpRight className="w-5 h-5 stroke-[2.5]" />
+              </>
+            )}
           </button>
 
           <div className="flex items-center justify-center gap-3 pt-1 text-[11px] text-white/75 font-medium">
             <span className="flex items-center gap-1">
-              <Shield className="w-3.5 h-3.5" /> 100% Free
+              <Shield className="w-3.5 h-3.5" /> Verified Institution Access
             </span>
             <span>•</span>
             <span className="flex items-center gap-1">
-              <Award className="w-3.5 h-3.5" /> Verified Norms
+              <Award className="w-3.5 h-3.5" /> RIASEC & XGBoost
             </span>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

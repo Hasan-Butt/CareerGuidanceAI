@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAssessmentStore } from "@/lib/store";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -23,25 +23,36 @@ export function AboutStep() {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [checkingCode, setCheckingCode] = useState(false);
 
+  // Guard: if no invite code is in state, redirect to landing step immediately
+  useEffect(() => {
+    if (!about.invite_code) {
+      router.replace("/assessment/landing");
+    }
+  }, [about.invite_code, router]);
+
   const handleNext = async () => {
     const code = inviteCode.trim().toUpperCase();
-    if (code) {
-      setCheckingCode(true);
-      setInviteError(null);
-      try {
-        await fetchOrg(code);
-      } catch (err) {
-        const status = (err as { status?: number }).status;
-        setInviteError(
-          status === 404
-            ? `"${code}" is not a valid invite code. Check it with your counsellor, or leave it empty.`
-            : "Could not check the invite code. Is the server running?"
-        );
-        return;
-      } finally {
-        setCheckingCode(false);
-      }
+    if (!code) {
+      setInviteError("A verified school or counsellor invite code is required to take this assessment.");
+      return;
     }
+
+    setCheckingCode(true);
+    setInviteError(null);
+    try {
+      await fetchOrg(code);
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      setInviteError(
+        status === 404
+          ? `"${code}" is not a valid invite code. You must enter a registered school or counsellor code to proceed.`
+          : "Could not verify the invite code. Is the backend running?"
+      );
+      return;
+    } finally {
+      setCheckingCode(false);
+    }
+
     setAbout({
       age,
       education,
@@ -190,12 +201,17 @@ export function AboutStep() {
 
           {/* Invite Code */}
           <div className="space-y-2 pt-2 border-t border-white/60">
-            <Label htmlFor="invite" className="font-bold text-slate-800">
-              Counsellor / School Invite Code (Optional)
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="invite" className="font-bold text-slate-800">
+                School / Counsellor Invite Code
+              </Label>
+              <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                Required
+              </span>
+            </div>
             <Input
               id="invite"
-              placeholder="e.g. FAST-LAHORE"
+              placeholder="e.g. FAST-LAHORE, NUST-ISB"
               value={inviteCode}
               onChange={(e) => {
                 setInviteCode(e.target.value);

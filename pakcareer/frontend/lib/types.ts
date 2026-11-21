@@ -30,7 +30,7 @@ export interface AssessmentPayload {
   familysize: number;
   urban_label: string;
   engnat_label: string;
-  invite_code?: string | null;
+  invite_code: string;
 }
 
 export interface SessionRecord {
