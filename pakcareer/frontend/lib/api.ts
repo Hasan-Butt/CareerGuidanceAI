@@ -19,15 +19,20 @@ async function apiFetch<T>(
 ): Promise<T> {
   const url = `${BASE}${path}`;
   const orgKey = getOrgKey();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 7000);
+
   try {
     const res = await fetch(url, {
       ...init,
+      signal: init?.signal || controller.signal,
       headers: {
         "Content-Type": "application/json",
         ...(orgKey ? { "X-Org-Key": orgKey } : {}),
         ...init?.headers,
       },
     });
+    clearTimeout(timeoutId);
     if (!res.ok) {
       let detail = res.statusText;
       try {
@@ -42,6 +47,10 @@ async function apiFetch<T>(
     }
     return res.json() as Promise<T>;
   } catch (err: unknown) {
+    clearTimeout(timeoutId);
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(`API ${path} timed out after 7s.`);
+    }
     if (err instanceof Error && err.message.startsWith("API ")) {
       throw err;
     }

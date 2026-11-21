@@ -6,6 +6,40 @@ import { useAssessmentStore } from "@/lib/store";
 import { fetchFollowupQuestions, fetchGeminiEnrichment } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ArrowRight, AlertCircle, Loader2, ArrowUpRight } from "lucide-react";
+import type { FollowupQuestion } from "@/lib/types";
+
+const DEFAULT_FALLBACK_QUESTIONS: FollowupQuestion[] = [
+  {
+    id: "fq1",
+    question: "If you had to pick one weekend project, which would you enjoy most?",
+    options: [
+      { key: "A", text: "Build a mobile app or website", maps_to: "Computer Science & IT" },
+      { key: "B", text: "Design and assemble a mechanical gadget", maps_to: "Engineering" },
+      { key: "C", text: "Start a small online business or manage accounts", maps_to: "Business & Commerce" },
+      { key: "D", text: "Volunteer at a health clinic or awareness campaign", maps_to: "Medicine & Health" },
+    ],
+  },
+  {
+    id: "fq2",
+    question: "Which university club would you most likely join?",
+    options: [
+      { key: "A", text: "AI & Robotics Club", maps_to: "Computer Science & IT" },
+      { key: "B", text: "Debate & Model UN Society", maps_to: "Arts, Humanities & Social Sciences" },
+      { key: "C", text: "Science Olympiad Team", maps_to: "Pure Sciences" },
+      { key: "D", text: "Moot Court / Law Society", maps_to: "Law" },
+    ],
+  },
+  {
+    id: "fq3",
+    question: "In a group project, which role do you naturally take?",
+    options: [
+      { key: "A", text: "The researcher who finds data and writes reports", maps_to: "Pure Sciences" },
+      { key: "B", text: "The technical person who builds the prototype", maps_to: "Engineering" },
+      { key: "C", text: "The presenter and negotiator", maps_to: "Business & Commerce" },
+      { key: "D", text: "The coordinator who keeps everyone on track", maps_to: "Arts, Humanities & Social Sciences" },
+    ],
+  },
+];
 
 export function FollowupStep() {
   const router = useRouter();
@@ -44,6 +78,15 @@ export function FollowupStep() {
     setLoadingQuestions(true);
     setFetchError(null);
 
+    // Hard 4-second safety guard: never let the user wait longer than 4s
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) {
+        console.warn("Gemini stage 1 response delayed; falling back to instant diagnostic questions.");
+        setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
+        setLoadingQuestions(false);
+      }
+    }, 4000);
+
     const sorted = [...allResults].sort((a, b) => b.probability - a.probability);
     const weakDomains: string[] = [];
     if (sorted.length >= 2) {
@@ -66,16 +109,18 @@ export function FollowupStep() {
     })
       .then((res) => {
         if (!isMounted) return;
+        clearTimeout(safetyTimer);
         if (res && res.questions && res.questions.length > 0) {
           setFollowupQuestions(res.questions);
         } else {
-          setFetchError("Unable to generate follow-up questions. You can proceed directly to results.");
+          setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
         }
       })
       .catch((err) => {
         if (!isMounted) return;
-        console.error("Stage 1 Gemini error:", err);
-        setFetchError("AI service currently busy. You can skip directly to your results.");
+        clearTimeout(safetyTimer);
+        console.warn("Stage 1 Gemini error/timeout; using instant fallback questions:", err);
+        setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
       })
       .finally(() => {
         if (isMounted) setLoadingQuestions(false);
@@ -83,6 +128,7 @@ export function FollowupStep() {
 
     return () => {
       isMounted = false;
+      clearTimeout(safetyTimer);
     };
   }, [allResults, profile, followupQuestions, setFollowupQuestions]);
 

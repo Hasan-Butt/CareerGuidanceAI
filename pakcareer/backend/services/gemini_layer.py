@@ -30,7 +30,15 @@ _quota_cooldown_until: float = 0.0
 
 def _is_quota_error(exc: Exception) -> bool:
     msg = str(exc).lower()
-    return "429" in msg or "quota" in msg or "resourceexhausted" in msg
+    return (
+        "429" in msg
+        or "quota" in msg
+        or "resourceexhausted" in msg
+        or "timed out" in msg
+        or "timeout" in msg
+        or "read timeout" in msg
+        or "connect" in msg
+    )
 
 # ── STAGE 1: Follow-up Question Generation ──────────────────────────────────
 
@@ -117,7 +125,7 @@ Return ONLY the JSON object as specified.
             )
             response = model.generate_content(
                 user_content,
-                request_options={"timeout": 6},
+                request_options={"timeout": 4},
             )
             result = json.loads(response.text)
             if "questions" in result and isinstance(result["questions"], list):
@@ -126,9 +134,9 @@ Return ONLY the JSON object as specified.
             log.warning("Gemini Stage 1 error with %s: %s", model_name, exc)
             if _is_quota_error(exc):
                 _quota_cooldown_until = time.time() + 300
-                log.info("Gemini quota limit active; fast-failing to instant diagnostic questions.")
+                log.info("Gemini quota or connection error; fast-failing to instant diagnostic questions.")
                 break
-            continue
+            break
 
     log.info("Using smart diagnostic fallback questions for Stage 1")
     return _fallback_questions()
@@ -275,7 +283,7 @@ Please:
             )
             response = model.generate_content(
                 user_content,
-                request_options={"timeout": 8},
+                request_options={"timeout": 4},
             )
             raw_text = response.text
 
@@ -291,9 +299,9 @@ Please:
             log.warning("Gemini Stage 2 error with %s: %s", model_name, exc)
             if _is_quota_error(exc):
                 _quota_cooldown_until = time.time() + 300
-                log.info("Gemini quota limit active; fast-failing to verified market intelligence.")
+                log.info("Gemini quota or connection error; fast-failing to verified market intelligence.")
                 break
-            continue
+            break
 
     log.info("Using verified market fallback intelligence for Stage 2")
     return _fallback_enrichment(xgb_ranking)
