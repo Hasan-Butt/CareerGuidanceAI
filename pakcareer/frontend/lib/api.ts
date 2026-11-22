@@ -15,12 +15,13 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function apiFetch<T>(
   path: string,
-  init?: RequestInit
+  init?: RequestInit & { timeoutMs?: number }
 ): Promise<T> {
   const url = `${BASE}${path}`;
   const orgKey = getOrgKey();
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 7000);
+  const timeoutMs = init?.timeoutMs ?? 15000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const res = await fetch(url, {
@@ -123,6 +124,7 @@ export function fetchFollowupQuestions(payload: {
   return apiFetch<{ questions: FollowupQuestion[] }>("/api/gemini/followup-questions", {
     method: "POST",
     body: JSON.stringify(payload),
+    timeoutMs: 12000,
   });
 }
 
@@ -134,6 +136,7 @@ export function fetchGeminiEnrichment(payload: {
   return apiFetch<GeminiEnrichment>("/api/gemini/validate-enrich", {
     method: "POST",
     body: JSON.stringify(payload),
+    timeoutMs: 65000,
   });
 }
 

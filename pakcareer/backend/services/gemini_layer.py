@@ -29,9 +29,8 @@ def _get_client() -> genai.Client | None:
     return _client
 
 FLASH_MODELS = [
-    os.environ.get("GEMINI_MODEL", "gemini-3.8-flash"),
-    "gemini-3.7-flash",
-    "gemini-3.6-flash",
+    os.environ.get("GEMINI_MODEL", "gemini-3.6-flash"),
+    "gemini-3.8-flash",
 ]
 
 _quota_cooldown_until: float = 0.0

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAssessmentStore } from "@/lib/store";
 import { fetchFollowupQuestions, fetchGeminiEnrichment } from "@/lib/api";
@@ -75,6 +75,7 @@ export function FollowupStep() {
   const [submittingStage2, setSubmittingStage2] = useState(false);
   const [stage2Status, setStage2Status] = useState<string>("");
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
     if (!sessionId && (!allResults || allResults.length === 0)) {
@@ -82,22 +83,24 @@ export function FollowupStep() {
       return;
     }
 
-    // If questions are already populated in store, don't re-fetch
-    if (followupQuestions && followupQuestions.length > 0) return;
+    // If questions are already populated in store, dismiss loader immediately
+    if (followupQuestions && followupQuestions.length > 0) {
+      setLoadingQuestions(false);
+      return;
+    }
     if (!allResults || allResults.length === 0) return;
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
 
-    let isMounted = true;
     setLoadingQuestions(true);
     setFetchError(null);
 
-    // 8-second safety guard: never let the student wait indefinitely
+    // Hard 5-second safety guard: never let the student wait indefinitely
     const safetyTimer = setTimeout(() => {
-      if (isMounted) {
-        console.warn("Gemini Stage 1 response delayed; using diagnostic questions.");
-        setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
-        setLoadingQuestions(false);
-      }
-    }, 8000);
+      console.warn("Gemini Stage 1 response delayed; using diagnostic questions.");
+      setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
+      setLoadingQuestions(false);
+    }, 5000);
 
     const sorted = [...allResults].sort((a, b) => b.probability - a.probability);
     const weakDomains: string[] = [];
@@ -120,7 +123,6 @@ export function FollowupStep() {
       weak_domains: weakDomains,
     })
       .then((res) => {
-        if (!isMounted) return;
         clearTimeout(safetyTimer);
         if (res && res.questions && res.questions.length > 0) {
           setFollowupQuestions(res.questions);
@@ -129,17 +131,15 @@ export function FollowupStep() {
         }
       })
       .catch((err) => {
-        if (!isMounted) return;
         clearTimeout(safetyTimer);
         console.warn("Stage 1 notice; using diagnostic fallback questions:", err);
         setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
       })
       .finally(() => {
-        if (isMounted) setLoadingQuestions(false);
+        setLoadingQuestions(false);
       });
 
     return () => {
-      isMounted = false;
       clearTimeout(safetyTimer);
     };
   }, [allResults, profile, followupQuestions, setFollowupQuestions, sessionId, router]);
