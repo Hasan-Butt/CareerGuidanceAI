@@ -19,9 +19,9 @@ if _API_KEY:
     genai.configure(api_key=_API_KEY, transport="rest")
 
 FLASH_MODELS = [
-    os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
+    os.environ.get("GEMINI_MODEL", "gemini-3.8-flash"),
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
 ]
 
 _quota_cooldown_until: float = 0.0
@@ -33,10 +33,6 @@ def _is_quota_error(exc: Exception) -> bool:
         "429" in msg
         or "quota" in msg
         or "resourceexhausted" in msg
-        or "timed out" in msg
-        or "timeout" in msg
-        or "read timeout" in msg
-        or "connect" in msg
     )
 
 
@@ -151,7 +147,6 @@ Return ONLY the JSON object as specified.
                 system_instruction=FOLLOWUP_SYSTEM_PROMPT,
                 generation_config={
                     "response_mime_type": "application/json",
-                    "temperature": 0.7,
                 },
             )
             response = model.generate_content(
@@ -315,9 +310,6 @@ Please:
                 model_name=model_name,
                 system_instruction=VALIDATION_SYSTEM_PROMPT,
                 tools="google_search_retrieval",
-                generation_config={
-                    "temperature": 0.3,
-                },
             )
             response = model.generate_content(
                 user_content,
