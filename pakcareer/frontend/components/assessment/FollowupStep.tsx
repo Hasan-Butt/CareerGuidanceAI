@@ -95,12 +95,12 @@ export function FollowupStep() {
     setLoadingQuestions(true);
     setFetchError(null);
 
-    // Hard 5-second safety guard: never let the student wait indefinitely
+    // 15-second safety guard: gives Gemini time to generate personalized questions
     const safetyTimer = setTimeout(() => {
       console.warn("Gemini Stage 1 response delayed; using diagnostic questions.");
       setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
       setLoadingQuestions(false);
-    }, 5000);
+    }, 15000);
 
     const sorted = [...allResults].sort((a, b) => b.probability - a.probability);
     const weakDomains: string[] = [];

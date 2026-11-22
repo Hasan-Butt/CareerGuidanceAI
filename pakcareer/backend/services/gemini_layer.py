@@ -10,18 +10,46 @@ import re
 import logging
 import time
 
+from pathlib import Path
+
 from google import genai
 from google.genai import types
 
 log = logging.getLogger("uvicorn.error")
 
-_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+
+def _load_api_key() -> str:
+    key = os.environ.get("GEMINI_API_KEY", "")
+    if key:
+        return key
+    candidates = [
+        Path(__file__).resolve().parent.parent.parent / ".env",   # pakcareer/.env
+        Path(__file__).resolve().parent.parent / ".env",          # pakcareer/backend/.env
+        Path.cwd() / "pakcareer" / ".env",
+        Path.cwd() / ".env",
+    ]
+    for env_path in candidates:
+        if env_path.is_file():
+            try:
+                for line in env_path.read_text(encoding="utf-8").splitlines():
+                    line = line.strip()
+                    if line.startswith("GEMINI_API_KEY=") and not line.startswith("#"):
+                        val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        if val:
+                            os.environ["GEMINI_API_KEY"] = val
+                            return val
+            except Exception:
+                pass
+    return ""
+
+
+_API_KEY = _load_api_key()
 _client: genai.Client | None = None
 
 
 def _get_client() -> genai.Client | None:
     global _client, _API_KEY
-    key = os.environ.get("GEMINI_API_KEY", "") or _API_KEY
+    key = os.environ.get("GEMINI_API_KEY", "") or _API_KEY or _load_api_key()
     if not key:
         return None
     if _client is None:
