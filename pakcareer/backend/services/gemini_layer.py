@@ -10,13 +10,23 @@ import re
 import logging
 import time
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 log = logging.getLogger("uvicorn.error")
 
 _API_KEY = os.environ.get("GEMINI_API_KEY", "")
-if _API_KEY:
-    genai.configure(api_key=_API_KEY, transport="rest")
+_client: genai.Client | None = None
+
+
+def _get_client() -> genai.Client | None:
+    global _client, _API_KEY
+    key = os.environ.get("GEMINI_API_KEY", "") or _API_KEY
+    if not key:
+        return None
+    if _client is None:
+        _client = genai.Client(api_key=key)
+    return _client
 
 FLASH_MODELS = [
     os.environ.get("GEMINI_MODEL", "gemini-3.8-flash"),
@@ -121,7 +131,8 @@ def generate_followup_questions(
         dict with "questions" key containing list of question objects
     """
     global _quota_cooldown_until
-    if not _API_KEY or time.time() < _quota_cooldown_until:
+    client = _get_client()
+    if not client or time.time() < _quota_cooldown_until:
         return _fallback_questions()
 
     if not weak_domains:
@@ -142,18 +153,16 @@ Return ONLY the JSON object as specified.
 
     for model_name in FLASH_MODELS:
         try:
-            model = genai.GenerativeModel(
-                model_name=model_name,
-                system_instruction=FOLLOWUP_SYSTEM_PROMPT,
-                generation_config={
-                    "response_mime_type": "application/json",
-                },
+            response = client.models.generate_content(
+                model=model_name,
+                contents=user_content,
+                config=types.GenerateContentConfig(
+                    system_instruction=FOLLOWUP_SYSTEM_PROMPT,
+                    response_mime_type="application/json",
+                ),
             )
-            response = model.generate_content(
-                user_content,
-                request_options={"timeout": 20},
-            )
-            result = json.loads(response.text)
+            raw_text = response.text or ""
+            result = json.loads(raw_text)
             if "questions" in result and isinstance(result["questions"], list):
                 return result
         except Exception as exc:
@@ -284,7 +293,8 @@ def validate_and_enrich(
         dict with adjusted_ranking, market_data, narratives, validation_summary, data_sources
     """
     global _quota_cooldown_until
-    if not _API_KEY or time.time() < _quota_cooldown_until:
+    client = _get_client()
+    if not client or time.time() < _quota_cooldown_until:
         return _fallback_enrichment(xgb_ranking)
 
     user_content = f"""
@@ -303,19 +313,19 @@ Please:
 4. Return the enriched JSON exactly as specified in your instructions.
 """
 
-    # Stage 2 uses Google Search grounding — cannot use JSON mime type with tools
+    # Stage 2 uses Google Search grounding via new google.genai SDK
     for model_name in FLASH_MODELS:
         try:
-            model = genai.GenerativeModel(
-                model_name=model_name,
-                system_instruction=VALIDATION_SYSTEM_PROMPT,
-                tools="google_search_retrieval",
+            response = client.models.generate_content(
+                model=model_name,
+                contents=user_content,
+                config=types.GenerateContentConfig(
+                    system_instruction=VALIDATION_SYSTEM_PROMPT,
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                ),
             )
-            response = model.generate_content(
-                user_content,
-                request_options={"timeout": 60},
-            )
-            log.info("Grounding metadata: %s", getattr(response.candidates[0], "grounding_metadata", None))
+            grounding = getattr(response.candidates[0], "grounding_metadata", None)
+            log.info("Grounding metadata: %s", grounding)
             raw_text = _extract_text_from_response(response)
 
             # Strip markdown code fences if present
