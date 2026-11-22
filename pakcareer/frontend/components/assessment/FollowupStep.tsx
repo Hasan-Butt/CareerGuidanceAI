@@ -59,10 +59,16 @@ export function FollowupStep() {
     setStep,
   } = useAssessmentStore();
 
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [submittingStage2, setSubmittingStage2] = useState(false);
   const [stage2Status, setStage2Status] = useState<string>("");
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // Initialize questions immediately so students never wait on a blank/spinner screen
+  useEffect(() => {
+    if (!followupQuestions || followupQuestions.length === 0) {
+      setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
+    }
+  }, [followupQuestions, setFollowupQuestions]);
 
   useEffect(() => {
     if (!sessionId && (!allResults || allResults.length === 0)) {
@@ -70,69 +76,9 @@ export function FollowupStep() {
     }
   }, [sessionId, allResults, router]);
 
-  useEffect(() => {
-    if (followupQuestions && followupQuestions.length > 0) return;
-    if (!allResults || allResults.length === 0) return;
-
-    let isMounted = true;
-    setLoadingQuestions(true);
-    setFetchError(null);
-
-    // Hard 4-second safety guard: never let the user wait longer than 4s
-    const safetyTimer = setTimeout(() => {
-      if (isMounted) {
-        console.warn("Gemini stage 1 response delayed; falling back to instant diagnostic questions.");
-        setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
-        setLoadingQuestions(false);
-      }
-    }, 4000);
-
-    const sorted = [...allResults].sort((a, b) => b.probability - a.probability);
-    const weakDomains: string[] = [];
-    if (sorted.length >= 2) {
-      weakDomains.push(sorted[0].house, sorted[1].house);
-      if (sorted.length >= 3 && Math.abs(sorted[1].probability - sorted[2].probability) < 8) {
-        weakDomains.push(sorted[2].house);
-      }
-    }
-
-    const probabilitiesPayload = allResults.map((r) => ({
-      house: r.house,
-      probability: r.probability,
-      emoji: r.emoji || "🎓",
-    }));
-
-    fetchFollowupQuestions({
-      xgb_probabilities: probabilitiesPayload,
-      holland_code: profile?.holland_code || "I-R-C",
-      weak_domains: weakDomains,
-    })
-      .then((res) => {
-        if (!isMounted) return;
-        clearTimeout(safetyTimer);
-        if (res && res.questions && res.questions.length > 0) {
-          setFollowupQuestions(res.questions);
-        } else {
-          setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
-        }
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        clearTimeout(safetyTimer);
-        console.warn("Stage 1 Gemini error/timeout; using instant fallback questions:", err);
-        setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
-      })
-      .finally(() => {
-        if (isMounted) setLoadingQuestions(false);
-      });
-
-    return () => {
-      isMounted = false;
-      clearTimeout(safetyTimer);
-    };
-  }, [allResults, profile, followupQuestions, setFollowupQuestions]);
-
-  const questions = followupQuestions || [];
+  const questions = followupQuestions && followupQuestions.length > 0
+    ? followupQuestions
+    : DEFAULT_FALLBACK_QUESTIONS;
   const answeredCount = questions.filter((q) => !!followupAnswers[q.id]).length;
   const isAllAnswered = questions.length > 0 && answeredCount === questions.length;
 
@@ -149,69 +95,39 @@ export function FollowupStep() {
     if (!isAllAnswered) return;
 
     setSubmittingStage2(true);
-    setStage2Status("Connecting to Gemini AI layer...");
+    setStage2Status("Synthesizing market intelligence & verified rankings...");
     setFetchError(null);
 
     try {
-      setStage2Status("Searching Pakistani job market data (Rozee.pk & HEC)...");
-
       const rankingPayload = (top3.length > 0 ? top3 : allResults.slice(0, 3)).map((r) => ({
         house: r.house,
         emoji: r.emoji || "🎓",
         probability: r.probability,
       }));
 
-      const enrichment = await fetchGeminiEnrichment({
+      // Try Stage 2 with a fast fallback if Gemini takes >2.5s
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Stage 2 timeout")), 2500)
+      );
+
+      const enrichmentPromise = fetchGeminiEnrichment({
         xgb_ranking: rankingPayload,
         followup_answers: followupAnswers,
         holland_code: profile?.holland_code || "I-R-C",
       });
 
-      setStage2Status("Synthesizing market intelligence...");
+      const enrichment = await Promise.race([enrichmentPromise, timeoutPromise]);
       setGeminiEnrichment(enrichment);
-
+    } catch (err: unknown) {
+      console.warn("Stage 2 validation bypassed or delayed:", err);
+    } finally {
       setStep("results");
       startTransition(() => {
         router.push(`/assessment/results?session=${sessionId || ""}`);
       });
-    } catch (err: unknown) {
-      console.error("Stage 2 validation failed:", err);
-      setStep("results");
-      router.push(`/assessment/results?session=${sessionId || ""}`);
-    } finally {
       setSubmittingStage2(false);
     }
   };
-
-  if (loadingQuestions) {
-    return (
-      <div className="max-w-md mx-auto py-20 px-4 text-center space-y-5">
-        <div className="w-16 h-16 rounded-3xl bg-white/70 backdrop-blur-md border border-white/80 flex items-center justify-center mx-auto shadow-md">
-          <Loader2 className="w-8 h-8 text-[#2b64ab] animate-spin" />
-        </div>
-        <div className="space-y-1.5">
-          <span className="text-xs font-bold text-white bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30 inline-flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Stage 1: AI Diagnostic Layer
-          </span>
-          <h2 className="text-2xl font-extrabold text-white drop-shadow-xs">
-            Evaluating Your Profile
-          </h2>
-          <p className="text-xs text-white/85 max-w-xs mx-auto">
-            Preparing 3–5 targeted questions to fine-tune your degree match recommendations...
-          </p>
-        </div>
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={handleSkipOrProceedWithoutAI}
-            className="text-xs font-bold text-white/90 hover:text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 transition cursor-pointer"
-          >
-            Skip to Instant Results ↗
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (submittingStage2) {
     return (

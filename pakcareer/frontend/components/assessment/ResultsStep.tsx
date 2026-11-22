@@ -111,6 +111,24 @@ const HOUSE_COLORS: Record<string, string> = {
   "Law": "#c45c26",
 };
 
+const HOUSE_SALARIES: Record<string, string> = {
+  "Computer Science & IT": "PKR 140k",
+  "Engineering": "PKR 120k",
+  "Medicine & Health": "PKR 130k",
+  "Business & Commerce": "PKR 125k",
+  "Arts, Humanities & Social Sciences": "PKR 110k",
+  "Pure Sciences": "PKR 105k",
+  "Law": "PKR 115k",
+};
+
+function getHouseSalary(house: string, marketData?: { avg_salary_pkr?: string } | null): string {
+  if (marketData?.avg_salary_pkr) {
+    const raw = marketData.avg_salary_pkr.split("–")[0].replace(/[^0-9kK]/g, "");
+    if (raw) return `PKR ${raw}`;
+  }
+  return HOUSE_SALARIES[house] || "PKR 115k";
+}
+
 export function ResultsStep() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -210,45 +228,31 @@ export function ResultsStep() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 py-4 px-2 sm:px-4">
-      {/* ── TOP HEADER (matching Middle Screen in reference) ── */}
+      {/* ── TOP HEADER ── */}
       <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/90 shadow-md relative bg-blue-100">
-            <Image
-              src="/avatar-user.png"
-              alt="User Avatar"
-              fill
-              className="object-cover"
-            />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 text-xs text-white/90 font-bold drop-shadow-xs">
-              <span>Hey 👋</span>
-            </div>
-            <span className="text-[11px] font-semibold text-white/75">
-              Dream Career Found
-            </span>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-white bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full border border-white/30 shadow-xs inline-flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>National Degree & Career Recommendations</span>
+          </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          {effectiveSessionId && (
-            <span className="hidden sm:inline text-[10px] font-mono font-bold text-white/80 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/30">
-              ID: {effectiveSessionId.slice(0, 8)}
-            </span>
-          )}
-          <div className="w-9 h-9 rounded-full bg-white/30 backdrop-blur-md border border-white/50 flex items-center justify-center text-white shadow-xs">
-            <Bell className="w-4 h-4" />
-          </div>
-        </div>
+        {effectiveSessionId && (
+          <span className="text-[11px] font-mono font-bold text-white/90 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30 shadow-xs">
+            ID: {effectiveSessionId.slice(0, 8)}
+          </span>
+        )}
       </div>
 
       {/* Main Headline */}
-      <div className="space-y-1">
+      <div className="space-y-1 pt-1">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight drop-shadow-sm">
-          Hey, Discover <br />
-          <span className="text-[#0f2942]">New Job Matches</span>
+          Discover Your <br />
+          <span className="text-[#0f2942]">Recommended Career Tracks</span>
         </h1>
+        <p className="text-slate-800 text-xs sm:text-sm font-semibold pt-1">
+          Scientifically calibrated for Pakistani universities using Holland RIASEC psychometrics and XGBoost.
+        </p>
       </div>
 
       {/* ── GLASS SEARCH & FILTER BAR (matching Middle Screen) ── */}
@@ -364,13 +368,9 @@ export function ResultsStep() {
               (a) => a.house.toLowerCase() === item.house.toLowerCase()
             );
             const market = geminiEnrichment?.market_data?.[item.house];
-            const isSaved = !!savedFavorites[item.house];
-            const isTopMatch = idx === 0;
 
-            // Formatted salary string
-            const salaryDisplay = market?.avg_salary_pkr
-              ? `PKR ${market.avg_salary_pkr.split("–")[0]}k`
-              : isTopMatch ? "PKR 150k" : "PKR 110k";
+            // Formatted salary string unified with detail modal
+            const salaryDisplay = getHouseSalary(item.house, market);
 
             return (
               <div
@@ -378,7 +378,7 @@ export function ResultsStep() {
                 onClick={() => setSelectedDetailHouse(item.house)}
                 className="group relative bg-white/85 hover:bg-white/95 backdrop-blur-xl border border-white/80 rounded-[28px] p-5 sm:p-6 shadow-[0_12px_36px_-12px_rgba(20,50,90,0.12)] space-y-4 transition-all duration-200 hover:shadow-[0_18px_44px_-10px_rgba(20,50,90,0.18)] cursor-pointer"
               >
-                {/* Card Top Row: Logo + Company Name + Heart + Dots (Exact from image) */}
+                {/* Card Top Row: Logo + Company Name */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div
@@ -395,30 +395,6 @@ export function ResultsStep() {
                         <span>Pakistan · Tier-1 Universities</span>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={(e) => toggleFavorite(item.house, e)}
-                      className={`w-8 h-8 rounded-full border flex items-center justify-center transition cursor-pointer ${
-                        isSaved
-                          ? "bg-rose-50 border-rose-200 text-rose-500"
-                          : "bg-white/70 border-slate-200 text-slate-400 hover:text-slate-600"
-                      }`}
-                    >
-                      <Heart className={`w-4 h-4 ${isSaved ? "fill-rose-500" : ""}`} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedDetailHouse(item.house);
-                      }}
-                      className="w-8 h-8 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
 
@@ -637,7 +613,7 @@ export function ResultsStep() {
       {/* ── DETAIL MODAL (Exact Replica of Right Screen "Job Details") ── */}
       {selectedDetailHouse && detailMeta && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="relative w-full max-w-md rounded-[36px] overflow-hidden bg-gradient-to-b from-[#87a9ca] via-[#9bb9d4] to-[#bed3e8] border border-white/80 shadow-[0_24px_60px_-15px_rgba(20,50,90,0.35)] p-5 sm:p-6 flex flex-col justify-between max-h-[92vh] overflow-y-auto space-y-4">
+          <div className="relative w-full max-w-md rounded-[36px] overflow-hidden bg-gradient-to-b from-[#87a9ca] via-[#9bb9d4] to-[#bed3e8] border border-white/80 shadow-[0_24px_60px_-15px_rgba(20,50,90,0.35)] p-5 sm:p-6 flex flex-col justify-between max-h-[92vh] overflow-y-auto space-y-4 custom-scrollbar">
             {/* Top Navigation Row: Back Button < | Title "Job Details" | Menu ... */}
             <div className="flex items-center justify-between text-white pb-1">
               <button
@@ -693,12 +669,9 @@ export function ResultsStep() {
                     {selectedDetailHouse}
                   </h4>
                   <div className="text-xl font-extrabold text-[#2b64ab]">
-                    {detailMarket?.avg_salary_pkr ? `PKR ${detailMarket.avg_salary_pkr.split("–")[0]}k` : "PKR 150k"}
+                    {getHouseSalary(selectedDetailHouse, detailMarket)}
                     <span className="text-xs font-normal text-slate-500"> /Month</span>
                   </div>
-                </div>
-                <div className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-[#2b64ab]">
-                  <Bookmark className="w-4 h-4" />
                 </div>
               </div>
 

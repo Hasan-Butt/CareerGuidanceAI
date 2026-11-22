@@ -188,14 +188,6 @@ export default function MarketingLandingPage() {
                   </div>
                   <span className="font-extrabold text-sm text-[#0f2942]">Systems / FAST</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
-                    <Heart className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
-                    <MoreVertical className="w-3.5 h-3.5" />
-                  </div>
-                </div>
               </div>
 
               <div>
@@ -242,14 +234,6 @@ export default function MarketingLandingPage() {
                   </div>
                   <span className="font-extrabold text-sm text-[#0f2942]">Engro / NUST</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
-                    <Heart className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
-                    <MoreVertical className="w-3.5 h-3.5" />
-                  </div>
-                </div>
               </div>
 
               <div>
@@ -295,14 +279,6 @@ export default function MarketingLandingPage() {
                     📊
                   </div>
                   <span className="font-extrabold text-sm text-[#0f2942]">HBL / LUMS / IBA</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
-                    <Heart className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="w-7 h-7 rounded-full bg-white/70 border border-slate-200 flex items-center justify-center text-slate-400">
-                    <MoreVertical className="w-3.5 h-3.5" />
-                  </div>
                 </div>
               </div>
 
