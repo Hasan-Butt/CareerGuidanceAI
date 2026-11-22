@@ -20,7 +20,7 @@ async function apiFetch<T>(
   const url = `${BASE}${path}`;
   const orgKey = getOrgKey();
   const controller = new AbortController();
-  const timeoutMs = init?.timeoutMs ?? 15000;
+  const timeoutMs = init?.timeoutMs ?? 15_000;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
@@ -50,7 +50,7 @@ async function apiFetch<T>(
   } catch (err: unknown) {
     clearTimeout(timeoutId);
     if (err instanceof Error && err.name === "AbortError") {
-      throw new Error(`API ${path} timed out after 7s.`);
+      throw new Error(`API ${path} timed out after ${timeoutMs / 1000}s.`);
     }
     if (err instanceof Error && err.message.startsWith("API ")) {
       throw err;
@@ -124,7 +124,7 @@ export function fetchFollowupQuestions(payload: {
   return apiFetch<{ questions: FollowupQuestion[] }>("/api/gemini/followup-questions", {
     method: "POST",
     body: JSON.stringify(payload),
-    timeoutMs: 12000,
+    timeoutMs: 30_000,
   });
 }
 
@@ -136,7 +136,7 @@ export function fetchGeminiEnrichment(payload: {
   return apiFetch<GeminiEnrichment>("/api/gemini/validate-enrich", {
     method: "POST",
     body: JSON.stringify(payload),
-    timeoutMs: 65000,
+    timeoutMs: 70_000,
   });
 }
 

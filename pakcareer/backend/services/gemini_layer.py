@@ -186,6 +186,8 @@ Return ONLY the JSON object as specified.
                 config=types.GenerateContentConfig(
                     system_instruction=FOLLOWUP_SYSTEM_PROMPT,
                     response_mime_type="application/json",
+                    thinking_config=types.ThinkingConfig(thinking_level="low"),
+                    http_options=types.HttpOptions(timeout=20_000),
                 ),
             )
             raw_text = response.text or ""
@@ -349,6 +351,7 @@ Please:
                 config=types.GenerateContentConfig(
                     system_instruction=VALIDATION_SYSTEM_PROMPT,
                     tools=[types.Tool(google_search=types.GoogleSearch())],
+                    http_options=types.HttpOptions(timeout=60_000),
                 ),
             )
             grounding = getattr(response.candidates[0], "grounding_metadata", None)

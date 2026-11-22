@@ -51,7 +51,7 @@ const DEFAULT_FALLBACK_QUESTIONS: FollowupQuestion[] = [
   },
 ];
 
-const STAGE2_TIMEOUT_MS = 65_000;
+const STAGE2_TIMEOUT_MS = 75_000;
 
 export function FollowupStep() {
   const router = useRouter();
@@ -95,12 +95,12 @@ export function FollowupStep() {
     setLoadingQuestions(true);
     setFetchError(null);
 
-    // 15-second safety guard: gives Gemini time to generate personalized questions
+    // 35-second safety guard: longer than API timeout (30s) and backend (20s)
     const safetyTimer = setTimeout(() => {
       console.warn("Gemini Stage 1 response delayed; using diagnostic questions.");
       setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
       setLoadingQuestions(false);
-    }, 15000);
+    }, 35_000);
 
     const sorted = [...allResults].sort((a, b) => b.probability - a.probability);
     const weakDomains: string[] = [];
