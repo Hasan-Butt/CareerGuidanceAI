@@ -19,10 +19,9 @@ if _API_KEY:
     genai.configure(api_key=_API_KEY, transport="rest")
 
 FLASH_MODELS = [
-    os.environ.get("GEMINI_MODEL", "gemini-3.8-flash"),
-    "gemini-3.7-flash",
-    "gemini-3.5-flash",
-    "gemini-flash-latest",
+    os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
 ]
 
 _quota_cooldown_until: float = 0.0
@@ -39,6 +38,35 @@ def _is_quota_error(exc: Exception) -> bool:
         or "read timeout" in msg
         or "connect" in msg
     )
+
+
+def _compute_weak_domains(xgb_probabilities: list[dict]) -> list[str]:
+    """Houses within 20% of the top-1 probability are ambiguous."""
+    if not xgb_probabilities:
+        return []
+    top_prob = float(xgb_probabilities[0].get("probability", 0))
+    return [
+        h["house"]
+        for h in xgb_probabilities
+        if abs(float(h.get("probability", 0)) - top_prob) <= 20
+    ]
+
+
+def _extract_text_from_response(response) -> str:
+    """Safe text extraction works with and without search grounding."""
+    try:
+        if hasattr(response, "text") and response.text:
+            return response.text
+    except Exception:
+        pass
+    parts = []
+    if hasattr(response, "candidates") and response.candidates:
+        for candidate in response.candidates:
+            if hasattr(candidate, "content") and hasattr(candidate.content, "parts"):
+                for part in candidate.content.parts:
+                    if hasattr(part, "text") and part.text:
+                        parts.append(part.text)
+    return "\n".join(parts)
 
 # ── STAGE 1: Follow-up Question Generation ──────────────────────────────────
 
@@ -83,7 +111,7 @@ OUTPUT FORMAT (strict):
 def generate_followup_questions(
     xgb_probabilities: list[dict],
     holland_code: str,
-    weak_domains: list[str],
+    weak_domains: list[str] | None = None,
 ) -> dict:
     """
     Stage 1: Generate 3-5 targeted follow-up questions.
@@ -99,6 +127,9 @@ def generate_followup_questions(
     global _quota_cooldown_until
     if not _API_KEY or time.time() < _quota_cooldown_until:
         return _fallback_questions()
+
+    if not weak_domains:
+        weak_domains = _compute_weak_domains(xgb_probabilities)
 
     user_content = f"""
 XGBoost probability distribution (top 7 Pakistani degree families):
@@ -125,7 +156,7 @@ Return ONLY the JSON object as specified.
             )
             response = model.generate_content(
                 user_content,
-                request_options={"timeout": 4},
+                request_options={"timeout": 20},
             )
             result = json.loads(response.text)
             if "questions" in result and isinstance(result["questions"], list):
@@ -136,7 +167,7 @@ Return ONLY the JSON object as specified.
                 _quota_cooldown_until = time.time() + 300
                 log.info("Gemini quota or connection error; fast-failing to instant diagnostic questions.")
                 break
-            break
+            continue
 
     log.info("Using smart diagnostic fallback questions for Stage 1")
     return _fallback_questions()
@@ -174,6 +205,16 @@ def _fallback_questions() -> dict:
                     {"key": "B", "text": "The technical person who builds the prototype", "maps_to": "Engineering"},
                     {"key": "C", "text": "The presenter and negotiator", "maps_to": "Business & Commerce"},
                     {"key": "D", "text": "The coordinator who keeps everyone on track", "maps_to": "Arts, Humanities & Social Sciences"},
+                ],
+            },
+            {
+                "id": "fq4",
+                "question": "Which of these problems would you most want to spend your career solving?",
+                "options": [
+                    {"key": "A", "text": "Reforming unjust laws or defending people's rights", "maps_to": "Law"},
+                    {"key": "B", "text": "Discovering how matter and energy work at a fundamental level", "maps_to": "Pure Sciences"},
+                    {"key": "C", "text": "Making education and social services more accessible in Pakistan", "maps_to": "Arts, Humanities & Social Sciences"},
+                    {"key": "D", "text": "Building systems that make cities more efficient", "maps_to": "Engineering"},
                 ],
             },
         ]
@@ -270,22 +311,19 @@ Please:
     # Stage 2 uses Google Search grounding — cannot use JSON mime type with tools
     for model_name in FLASH_MODELS:
         try:
-            search_tool = genai.protos.Tool(
-                google_search_retrieval=genai.protos.GoogleSearchRetrieval()
-            )
             model = genai.GenerativeModel(
                 model_name=model_name,
                 system_instruction=VALIDATION_SYSTEM_PROMPT,
-                tools=[search_tool],
+                tools="google_search_retrieval",
                 generation_config={
                     "temperature": 0.3,
                 },
             )
             response = model.generate_content(
                 user_content,
-                request_options={"timeout": 4},
+                request_options={"timeout": 60},
             )
-            raw_text = response.text
+            raw_text = _extract_text_from_response(response)
 
             # Strip markdown code fences if present
             json_text = _extract_json(raw_text)
@@ -294,6 +332,9 @@ Please:
             # Validate required keys
             required_keys = {"adjusted_ranking", "market_data", "narratives", "validation_summary"}
             if required_keys.issubset(result.keys()):
+                for item in result.get("adjusted_ranking", []):
+                    item["adjusted_confidence"] = max(0.0, min(100.0, float(item.get("adjusted_confidence", 0))))
+                    item["original_probability"] = float(item.get("original_probability", 0))
                 return result
         except Exception as exc:
             log.warning("Gemini Stage 2 error with %s: %s", model_name, exc)
@@ -301,7 +342,7 @@ Please:
                 _quota_cooldown_until = time.time() + 300
                 log.info("Gemini quota or connection error; fast-failing to verified market intelligence.")
                 break
-            break
+            continue
 
     log.info("Using verified market fallback intelligence for Stage 2")
     return _fallback_enrichment(xgb_ranking)

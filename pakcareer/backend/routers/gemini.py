@@ -20,7 +20,7 @@ router = APIRouter(prefix="/gemini", tags=["gemini"])
 class FollowupRequest(BaseModel):
     xgb_probabilities: list[dict[str, Any]]  # [{house, probability, emoji}]
     holland_code: str
-    weak_domains: list[str]                  # houses with close scores
+    weak_domains: list[str] = []             # houses with close scores (auto-computed if omitted)
 
 
 class ValidationRequest(BaseModel):

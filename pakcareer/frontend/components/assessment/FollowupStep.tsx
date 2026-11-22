@@ -39,6 +39,16 @@ const DEFAULT_FALLBACK_QUESTIONS: FollowupQuestion[] = [
       { key: "D", text: "The coordinator who keeps everyone on track", maps_to: "Arts, Humanities & Social Sciences" },
     ],
   },
+  {
+    id: "fq4",
+    question: "Which of these problems would you most want to spend your career solving?",
+    options: [
+      { key: "A", text: "Reforming unjust laws or defending people's rights", maps_to: "Law" },
+      { key: "B", text: "Discovering how matter and energy work at a fundamental level", maps_to: "Pure Sciences" },
+      { key: "C", text: "Making education and social services more accessible in Pakistan", maps_to: "Arts, Humanities & Social Sciences" },
+      { key: "D", text: "Building systems that make cities more efficient", maps_to: "Engineering" },
+    ],
+  },
 ];
 
 export function FollowupStep() {
@@ -59,22 +69,78 @@ export function FollowupStep() {
     setStep,
   } = useAssessmentStore();
 
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [submittingStage2, setSubmittingStage2] = useState(false);
   const [stage2Status, setStage2Status] = useState<string>("");
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Initialize questions immediately so students never wait on a blank/spinner screen
-  useEffect(() => {
-    if (!followupQuestions || followupQuestions.length === 0) {
-      setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
-    }
-  }, [followupQuestions, setFollowupQuestions]);
-
   useEffect(() => {
     if (!sessionId && (!allResults || allResults.length === 0)) {
       router.push("/assessment/landing");
+      return;
     }
-  }, [sessionId, allResults, router]);
+
+    // If questions are already populated in store, don't re-fetch
+    if (followupQuestions && followupQuestions.length > 0) return;
+    if (!allResults || allResults.length === 0) return;
+
+    let isMounted = true;
+    setLoadingQuestions(true);
+    setFetchError(null);
+
+    // 8-second safety guard: never let the student wait indefinitely
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) {
+        console.warn("Gemini Stage 1 response delayed; using diagnostic questions.");
+        setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
+        setLoadingQuestions(false);
+      }
+    }, 8000);
+
+    const sorted = [...allResults].sort((a, b) => b.probability - a.probability);
+    const weakDomains: string[] = [];
+    if (sorted.length >= 2) {
+      weakDomains.push(sorted[0].house, sorted[1].house);
+      if (sorted.length >= 3 && Math.abs(sorted[1].probability - sorted[2].probability) < 15) {
+        weakDomains.push(sorted[2].house);
+      }
+    }
+
+    const probabilitiesPayload = allResults.map((r) => ({
+      house: r.house,
+      probability: r.probability,
+      emoji: r.emoji || "🎓",
+    }));
+
+    fetchFollowupQuestions({
+      xgb_probabilities: probabilitiesPayload,
+      holland_code: profile?.holland_code || "I-R-C",
+      weak_domains: weakDomains,
+    })
+      .then((res) => {
+        if (!isMounted) return;
+        clearTimeout(safetyTimer);
+        if (res && res.questions && res.questions.length > 0) {
+          setFollowupQuestions(res.questions);
+        } else {
+          setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        clearTimeout(safetyTimer);
+        console.warn("Stage 1 notice; using diagnostic fallback questions:", err);
+        setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingQuestions(false);
+      });
+
+    return () => {
+      isMounted = false;
+      clearTimeout(safetyTimer);
+    };
+  }, [allResults, profile, followupQuestions, setFollowupQuestions, sessionId, router]);
 
   const questions = followupQuestions && followupQuestions.length > 0
     ? followupQuestions
@@ -95,7 +161,7 @@ export function FollowupStep() {
     if (!isAllAnswered) return;
 
     setSubmittingStage2(true);
-    setStage2Status("Synthesizing market intelligence & verified rankings...");
+    setStage2Status("Synthesizing market intelligence & verified rankings with Gemini AI...");
     setFetchError(null);
 
     try {
@@ -105,9 +171,9 @@ export function FollowupStep() {
         probability: r.probability,
       }));
 
-      // Try Stage 2 with a fast fallback if Gemini takes >2.5s
+      // Stage 2 with 15-second client timeout for live search grounding
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Stage 2 timeout")), 2500)
+        setTimeout(() => reject(new Error("Stage 2 timeout")), 15000)
       );
 
       const enrichmentPromise = fetchGeminiEnrichment({
@@ -128,6 +194,36 @@ export function FollowupStep() {
       setSubmittingStage2(false);
     }
   };
+
+  if (loadingQuestions) {
+    return (
+      <div className="max-w-md mx-auto py-20 px-4 text-center space-y-5">
+        <div className="w-16 h-16 rounded-3xl bg-white/70 backdrop-blur-md border border-white/80 flex items-center justify-center mx-auto shadow-md">
+          <Loader2 className="w-8 h-8 text-[#2b64ab] animate-spin" />
+        </div>
+        <div className="space-y-1.5">
+          <span className="text-xs font-bold text-[#2b64ab] bg-blue-50 border border-blue-200/60 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5" /> Stage 1: AI Diagnostic Layer
+          </span>
+          <h2 className="text-2xl font-extrabold text-[#0f2942]">
+            Evaluating Your Profile
+          </h2>
+          <p className="text-xs font-medium text-slate-600 max-w-xs mx-auto leading-relaxed">
+            Preparing 3–5 targeted questions to fine-tune your degree match recommendations...
+          </p>
+        </div>
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={handleSkipOrProceedWithoutAI}
+            className="text-xs font-bold text-[#2b64ab] hover:text-[#1f4f8b] bg-white/80 hover:bg-white backdrop-blur-md px-4 py-2 rounded-full border border-blue-200 transition cursor-pointer shadow-xs"
+          >
+            Skip to Instant Results ↗
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (submittingStage2) {
     return (
