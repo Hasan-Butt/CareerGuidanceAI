@@ -323,6 +323,7 @@ Please:
                 user_content,
                 request_options={"timeout": 60},
             )
+            log.info("Grounding metadata: %s", getattr(response.candidates[0], "grounding_metadata", None))
             raw_text = _extract_text_from_response(response)
 
             # Strip markdown code fences if present

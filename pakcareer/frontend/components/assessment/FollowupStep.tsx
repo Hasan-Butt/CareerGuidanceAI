@@ -51,6 +51,8 @@ const DEFAULT_FALLBACK_QUESTIONS: FollowupQuestion[] = [
   },
 ];
 
+const STAGE2_TIMEOUT_MS = 65_000;
+
 export function FollowupStep() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -171,9 +173,9 @@ export function FollowupStep() {
         probability: r.probability,
       }));
 
-      // Stage 2 with 15-second client timeout for live search grounding
+      // Stage 2 with 65-second client timeout matching backend 60s + 5s buffer
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Stage 2 timeout")), 15000)
+        setTimeout(() => reject(new Error("Stage 2 timeout")), STAGE2_TIMEOUT_MS)
       );
 
       const enrichmentPromise = fetchGeminiEnrichment({
