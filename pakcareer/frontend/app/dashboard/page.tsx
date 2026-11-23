@@ -67,13 +67,13 @@ export default function DashboardSessionsPage() {
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Top Banner & KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-teal-200 bg-white">
+        <Card className="border-white/80 bg-white/75 backdrop-blur-md">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-teal-50 text-[#0f766e] flex items-center justify-center font-bold">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#2b64ab] flex items-center justify-center font-bold">
               <Users className="w-6 h-6" />
             </div>
             <div>
-              <div className="text-2xl font-extrabold text-[#0f2f38]">{totalCount}</div>
+              <div className="text-2xl font-extrabold text-[#0f2942]">{totalCount}</div>
               <div className="text-xs font-semibold text-slate-500">Total Student Assessments</div>
             </div>
           </CardContent>
@@ -156,7 +156,7 @@ export default function DashboardSessionsPage() {
         <CardContent className="p-0">
           {loading ? (
             <div className="py-16 text-center text-slate-500 space-y-2">
-              <div className="inline-block w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
+              <div className="inline-block w-6 h-6 border-2 border-[#2b64ab] border-t-transparent rounded-full animate-spin" />
               <p className="text-xs">Loading sessions from database...</p>
             </div>
           ) : filtered.length === 0 ? (
@@ -185,12 +185,12 @@ export default function DashboardSessionsPage() {
                   {filtered.map((s) => (
                     <tr
                       key={s.session_id}
-                      className="hover:bg-teal-50/30 transition-colors"
+                      className="hover:bg-blue-50/40 transition-colors"
                     >
                       <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
                         <Link
                           href={`/dashboard/sessions/${s.session_id}`}
-                          className="hover:text-[#0f766e] hover:underline"
+                          className="hover:text-[#2b64ab] hover:underline"
                         >
                           {s.session_id.slice(0, 8)}...
                         </Link>
@@ -219,7 +219,7 @@ export default function DashboardSessionsPage() {
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="font-mono font-bold text-[#0f766e] bg-teal-50 px-2 py-0.5 rounded-md">
+                        <span className="font-mono font-bold text-[#2b64ab] bg-blue-50/80 px-2.5 py-0.5 rounded-full border border-blue-200/50">
                           {s.holland_code}
                         </span>
                       </td>

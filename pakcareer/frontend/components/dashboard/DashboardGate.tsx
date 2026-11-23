@@ -74,7 +74,7 @@ export function DashboardGate({ children }: { children: React.ReactNode }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <KeyRound className="w-5 h-5 text-[#0f766e]" />
+              <KeyRound className="w-5 h-5 text-[#2b64ab]" />
               Counsellor sign-in
             </CardTitle>
             <CardDescription>
@@ -108,8 +108,8 @@ export function DashboardGate({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="space-y-4">
-      <div className="max-w-6xl mx-auto flex items-center justify-between rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-sm">
-        <span className="text-[#0f2f38]">
+      <div className="max-w-6xl mx-auto flex items-center justify-between rounded-full border border-blue-200/80 bg-white/70 backdrop-blur-md px-5 py-2.5 text-sm shadow-xs">
+        <span className="text-[#0f2942]">
           Signed in as <strong>{org.name}</strong>
           <span className="ml-2 text-xs text-slate-500">invite code {org.invite_code}</span>
         </span>

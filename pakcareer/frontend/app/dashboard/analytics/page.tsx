@@ -10,7 +10,7 @@ import { BarChart3, Users, Compass, School, PieChart } from "lucide-react";
 import type { AnalyticsData } from "@/lib/types";
 
 const HOUSE_COLORS: Record<string, string> = {
-  "Computer Science & IT": "#0f766e",
+  "Computer Science & IT": "#2b64ab",
   "Engineering": "#0284c7",
   "Medicine & Health": "#059669",
   "Business & Commerce": "#d97706",
@@ -60,11 +60,11 @@ export default function DashboardAnalyticsPage() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Filter Bar */}
-      <Card className="border-slate-200">
+      <Card className="bg-white/75 backdrop-blur-xl border-white/85 shadow-sm">
         <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <BarChart3 className="w-5 h-5 text-[#0f766e]" />
-            <span className="font-bold text-sm text-[#0f2f38]">
+            <BarChart3 className="w-5 h-5 text-[#2b64ab]" />
+            <span className="font-extrabold text-sm text-[#0f2942]">
               Cohort Analytics & Trends
             </span>
           </div>
@@ -74,7 +74,7 @@ export default function DashboardAnalyticsPage() {
               variant="outline"
               size="sm"
               onClick={() => loadAnalytics()}
-              className="text-xs"
+              className="text-xs font-bold rounded-full bg-white/70 border-white/90 text-slate-700 hover:bg-white"
             >
               Refresh
             </Button>
@@ -84,11 +84,11 @@ export default function DashboardAnalyticsPage() {
 
       {loading ? (
         <div className="py-20 text-center text-slate-500 space-y-2">
-          <div className="inline-block w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs">Compiling batch analytics...</p>
+          <div className="inline-block w-8 h-8 border-4 border-[#2b64ab] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-semibold text-slate-600">Compiling batch analytics...</p>
         </div>
       ) : !data || data.total === 0 ? (
-        <Card className="border-slate-200 py-16 text-center">
+        <Card className="bg-white/75 backdrop-blur-xl border-white/85 py-16 text-center shadow-sm">
           <CardContent className="space-y-3">
             <Users className="w-10 h-10 text-slate-300 mx-auto" />
             <h3 className="font-bold text-slate-800">No Assessment Data Yet</h3>
@@ -101,25 +101,25 @@ export default function DashboardAnalyticsPage() {
         <>
           {/* Top KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="border-teal-200 bg-white">
+            <Card className="bg-white/75 backdrop-blur-xl border-white/85 shadow-sm">
               <CardContent className="p-5 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-teal-50 text-[#0f766e] flex items-center justify-center font-bold">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50/80 text-[#2b64ab] border border-blue-200/60 flex items-center justify-center font-bold">
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-2xl font-extrabold text-[#0f2f38]">{data.total}</div>
+                  <div className="text-2xl font-extrabold text-[#0f2942]">{data.total}</div>
                   <div className="text-xs font-semibold text-slate-500">Cohort Assessments</div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-slate-200 bg-white">
+            <Card className="bg-white/75 backdrop-blur-xl border-white/85 shadow-sm">
               <CardContent className="p-5 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-amber-50 text-[#c45c26] flex items-center justify-center font-bold">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50/80 text-[#c45c26] border border-amber-200/60 flex items-center justify-center font-bold">
                   <Compass className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-2xl font-extrabold text-[#0f2f38]">
+                  <div className="text-2xl font-extrabold text-[#0f2942]">
                     {Object.keys(data.house_distribution).length} / 7
                   </div>
                   <div className="text-xs font-semibold text-slate-500">Active Degree Tracks</div>
@@ -127,13 +127,13 @@ export default function DashboardAnalyticsPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-slate-200 bg-white">
+            <Card className="bg-white/75 backdrop-blur-xl border-white/85 shadow-sm">
               <CardContent className="p-5 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                <div className="w-12 h-12 rounded-2xl bg-purple-50/80 text-purple-700 border border-purple-200/60 flex items-center justify-center font-bold">
                   <School className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-2xl font-extrabold text-[#0f2f38]">
+                  <div className="text-2xl font-extrabold text-[#0f2942]">
                     {hollandData[0]?.code || "—"}
                   </div>
                   <div className="text-xs font-semibold text-slate-500">Leading Holland Code</div>
@@ -143,9 +143,9 @@ export default function DashboardAnalyticsPage() {
           </div>
 
           {/* Degree House Distribution Chart */}
-          <Card className="border-slate-200">
+          <Card className="bg-white/75 backdrop-blur-xl border-white/85 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base font-bold text-[#0f2f38]">
+              <CardTitle className="text-base font-extrabold text-[#0f2942]">
                 Cohort Degree Family Distribution
               </CardTitle>
               <CardDescription className="text-xs">
@@ -167,13 +167,13 @@ export default function DashboardAnalyticsPage() {
                         `${typeof val === 'number' ? val : Number(val)} students`,
                         "Cohort Count",
                       ]}
-                      contentStyle={{ borderRadius: "8px", fontSize: "12px" }}
+                      contentStyle={{ borderRadius: "12px", fontSize: "12px", border: "1px solid rgba(255,255,255,0.8)", backdropFilter: "blur(8px)" }}
                     />
                     <Bar dataKey="count" radius={[0, 6, 6, 0]}>
                       {houseData.map((entry) => (
                         <Cell
                           key={`cell-${entry.name}`}
-                          fill={HOUSE_COLORS[entry.name] || "#0f766e"}
+                          fill={HOUSE_COLORS[entry.name] || "#2b64ab"}
                         />
                       ))}
                     </Bar>
@@ -186,9 +186,9 @@ export default function DashboardAnalyticsPage() {
           {/* Bottom Grid: Holland Codes & Urban Split */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Holland Codes */}
-            <Card className="border-slate-200">
+            <Card className="bg-white/75 backdrop-blur-xl border-white/85 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-base font-bold text-[#0f2f38]">
+                <CardTitle className="text-base font-extrabold text-[#0f2942]">
                   Top Holland Codes in Cohort
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -202,12 +202,12 @@ export default function DashboardAnalyticsPage() {
                     return (
                       <div key={item.code} className="space-y-1">
                         <div className="flex justify-between text-xs font-semibold text-slate-700">
-                          <span className="font-mono text-[#0f766e]">{item.code}</span>
+                          <span className="font-mono text-[#2b64ab] font-bold">{item.code}</span>
                           <span>{item.count} students ({pct}%)</span>
                         </div>
-                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-2 w-full bg-slate-100/80 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#0f766e] rounded-full"
+                            className="h-full bg-gradient-to-r from-[#2b64ab] to-[#518ee0] rounded-full"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

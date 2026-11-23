@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAssessmentStore } from "@/lib/store";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -23,33 +23,42 @@ export function AboutStep() {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [checkingCode, setCheckingCode] = useState(false);
 
+  // Guard: if no invite code is in state, redirect to landing step immediately
+  useEffect(() => {
+    if (!about.invite_code) {
+      router.replace("/assessment/landing");
+    }
+  }, [about.invite_code, router]);
+
   const handleNext = async () => {
     const code = inviteCode.trim().toUpperCase();
-    // Check the invite code now, not after the student has answered 70 questions.
-    if (code) {
-      setCheckingCode(true);
-      setInviteError(null);
-      try {
-        await fetchOrg(code);
-      } catch (err) {
-        const status = (err as { status?: number }).status;
-        setInviteError(
-          status === 404
-            ? `"${code}" is not a valid invite code. Check it with your counsellor, or leave it empty.`
-            : "Could not check the invite code. Is the server running?"
-        );
-        return;
-      } finally {
-        setCheckingCode(false);
-      }
+    if (!code) {
+      setInviteError("A verified school or counsellor invite code is required to take this assessment.");
+      return;
     }
+
+    setCheckingCode(true);
+    setInviteError(null);
+    try {
+      await fetchOrg(code);
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      setInviteError(
+        status === 404
+          ? `"${code}" is not a valid invite code. You must enter a registered school or counsellor code to proceed.`
+          : "Could not verify the invite code. Is the backend running?"
+      );
+      return;
+    } finally {
+      setCheckingCode(false);
+    }
+
     setAbout({
       age,
       education,
       familysize,
       urban_label: urbanLabel,
       engnat_label: engnatLabel,
-      // "" (not undefined) so clearing a code from the landing page sticks
       invite_code: code,
     });
     setStep("riasec");
@@ -62,10 +71,15 @@ export function AboutStep() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 py-6">
-      <Card>
+    <div className="max-w-2xl mx-auto space-y-6 py-6 px-2 sm:px-0">
+      <Card className="bg-white/75 backdrop-blur-2xl border-white/85 shadow-[0_16px_40px_-10px_rgba(20,50,90,0.16)]">
         <CardHeader>
-          <CardTitle>About You</CardTitle>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#2b64ab] bg-blue-50/80 px-3.5 py-1 rounded-full border border-blue-200/60 shadow-2xs">
+              Context Calibration
+            </span>
+          </div>
+          <CardTitle className="text-2xl font-extrabold text-[#0f2942] pt-2">About You</CardTitle>
           <CardDescription>
             These demographic factors allow our XGBoost model to contextualize your responses against benchmark cohorts in Pakistan.
           </CardDescription>
@@ -74,8 +88,10 @@ export function AboutStep() {
           {/* Age */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label htmlFor="age">Age</Label>
-              <span className="text-sm font-bold text-[#0f766e]">{age} years old</span>
+              <Label htmlFor="age" className="font-bold text-slate-800">Age</Label>
+              <span className="text-sm font-extrabold text-[#2b64ab] bg-blue-50/80 px-3.5 py-1 rounded-full border border-blue-200/60 shadow-2xs">
+                {age} years old
+              </span>
             </div>
             <input
               id="age"
@@ -84,9 +100,9 @@ export function AboutStep() {
               max={35}
               value={age}
               onChange={(e) => setAge(Number(e.target.value))}
-              className="w-full accent-[#0f766e] cursor-pointer"
+              className="w-full h-2 bg-white/60 rounded-lg appearance-none cursor-pointer accent-[#2b64ab]"
             />
-            <div className="flex justify-between text-xs text-slate-400">
+            <div className="flex justify-between text-xs text-slate-500 font-semibold px-1">
               <span>13</span>
               <span>18</span>
               <span>25</span>
@@ -96,12 +112,14 @@ export function AboutStep() {
 
           {/* Education */}
           <div className="space-y-2">
-            <Label htmlFor="education">Highest Education Completed / Current Level</Label>
+            <Label htmlFor="education" className="font-bold text-slate-800">
+              Highest Education Completed / Current Level
+            </Label>
             <select
               id="education"
               value={education}
               onChange={(e) => setEducation(e.target.value)}
-              className="w-full h-10 px-3 py-2 text-sm rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0f766e] cursor-pointer"
+              className="w-full h-12 px-4 py-2 text-sm rounded-[20px] border border-white/80 bg-white/80 backdrop-blur-md text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#2b64ab] shadow-2xs cursor-pointer font-semibold"
             >
               {EDUCATION_OPTIONS.map((opt) => (
                 <option key={opt} value={opt}>
@@ -114,8 +132,10 @@ export function AboutStep() {
           {/* Family Size */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label htmlFor="familysize">Family Size (Household Members)</Label>
-              <span className="text-sm font-bold text-[#0f766e]">{familysize} persons</span>
+              <Label htmlFor="familysize" className="font-bold text-slate-800">Family Size (Household Members)</Label>
+              <span className="text-sm font-extrabold text-[#2b64ab] bg-blue-50/80 px-3.5 py-1 rounded-full border border-blue-200/60 shadow-2xs">
+                {familysize} persons
+              </span>
             </div>
             <input
               id="familysize"
@@ -124,9 +144,9 @@ export function AboutStep() {
               max={15}
               value={familysize}
               onChange={(e) => setFamilysize(Number(e.target.value))}
-              className="w-full accent-[#0f766e] cursor-pointer"
+              className="w-full h-2 bg-white/60 rounded-lg appearance-none cursor-pointer accent-[#2b64ab]"
             />
-            <div className="flex justify-between text-xs text-slate-400">
+            <div className="flex justify-between text-xs text-slate-500 font-semibold px-1">
               <span>1</span>
               <span>5</span>
               <span>10</span>
@@ -136,17 +156,17 @@ export function AboutStep() {
 
           {/* Urban / Suburban / Rural */}
           <div className="space-y-2">
-            <Label>Living Environment</Label>
+            <Label className="font-bold text-slate-800">Living Environment</Label>
             <div className="grid grid-cols-3 gap-3">
               {["Urban", "Suburban", "Rural"].map((u) => (
                 <button
                   key={u}
                   type="button"
                   onClick={() => setUrbanLabel(u)}
-                  className={`py-2.5 px-3 rounded-lg border text-sm font-semibold text-center transition-all cursor-pointer ${
+                  className={`py-3 px-3 rounded-[20px] border text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${
                     urbanLabel === u
-                      ? "border-[#0f766e] bg-teal-50 text-[#0f766e]"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      ? "border-[#2b64ab] bg-[#2b64ab] text-white shadow-md shadow-blue-900/20"
+                      : "border-white/85 bg-white/70 hover:bg-white text-slate-700 shadow-2xs"
                   }`}
                 >
                   {u}
@@ -157,7 +177,7 @@ export function AboutStep() {
 
           {/* English Native */}
           <div className="space-y-2">
-            <Label>Is English your primary native language at home?</Label>
+            <Label className="font-bold text-slate-800">Is English your primary native language at home?</Label>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "No (Urdu / Regional / Bilingual)", val: "No" },
@@ -167,10 +187,10 @@ export function AboutStep() {
                   key={opt.val}
                   type="button"
                   onClick={() => setEngnatLabel(opt.val)}
-                  className={`py-2.5 px-3 rounded-lg border text-xs sm:text-sm font-semibold text-center transition-all cursor-pointer ${
+                  className={`py-3 px-3 rounded-[20px] border text-xs sm:text-sm font-bold text-center transition-all cursor-pointer ${
                     engnatLabel === opt.val
-                      ? "border-[#0f766e] bg-teal-50 text-[#0f766e]"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      ? "border-[#2b64ab] bg-[#2b64ab] text-white shadow-md shadow-blue-900/20"
+                      : "border-white/85 bg-white/70 hover:bg-white text-slate-700 shadow-2xs"
                   }`}
                 >
                   {opt.label}
@@ -180,20 +200,27 @@ export function AboutStep() {
           </div>
 
           {/* Invite Code */}
-          <div className="space-y-2 pt-2 border-t border-slate-100">
-            <Label htmlFor="invite">Counsellor / School Invite Code (Optional)</Label>
+          <div className="space-y-2 pt-2 border-t border-white/60">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="invite" className="font-bold text-slate-800">
+                School / Counsellor Invite Code
+              </Label>
+              <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                Required
+              </span>
+            </div>
             <Input
               id="invite"
-              placeholder="e.g. FAST-LAHORE"
+              placeholder="e.g. FAST-LAHORE, NUST-ISB"
               value={inviteCode}
               onChange={(e) => {
                 setInviteCode(e.target.value);
                 setInviteError(null);
               }}
-              className="uppercase font-mono"
+              className="uppercase font-mono font-bold tracking-wider rounded-[20px] h-12"
               aria-invalid={!!inviteError}
             />
-            {inviteError && <p className="text-sm text-red-600">{inviteError}</p>}
+            {inviteError && <p className="text-sm text-red-600 font-medium">{inviteError}</p>}
           </div>
 
           <NavButtons
@@ -207,4 +234,3 @@ export function AboutStep() {
     </div>
   );
 }
-

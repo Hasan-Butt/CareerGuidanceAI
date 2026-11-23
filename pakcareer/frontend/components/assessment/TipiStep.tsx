@@ -36,18 +36,18 @@ export function TipiStep() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 py-6">
+    <div className="max-w-3xl mx-auto space-y-6 py-6 px-2 sm:px-0">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#0f766e]">
+            <span className="text-xs font-bold text-[#2b64ab] bg-blue-50 px-3 py-1 rounded-full border border-blue-200/60 shadow-2xs">
               Personality Inventory (TIPI)
             </span>
-            <span className="text-xs font-medium text-slate-500">
+            <span className="text-xs font-bold text-slate-500 bg-white/70 px-2.5 py-0.5 rounded-full border border-white">
               10 short traits
             </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-[#0f2f38]">
+          <CardTitle className="text-2xl font-extrabold text-[#0f2942] pt-2">
             How would you describe yourself?
           </CardTitle>
           <CardDescription>
@@ -55,7 +55,7 @@ export function TipiStep() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {TIPI_QUESTIONS.map((trait, idx) => {
               const itemKey = `TIPI${idx + 1}`;
               const selectedValue = tipi[itemKey];
@@ -63,18 +63,18 @@ export function TipiStep() {
               return (
                 <div
                   key={itemKey}
-                  className={`p-4 rounded-xl border transition-all ${
+                  className={`p-4 rounded-[22px] border transition-all ${
                     selectedValue !== undefined
-                      ? "border-teal-200 bg-teal-50/20"
-                      : "border-slate-200/80 bg-white"
+                      ? "border-blue-200/80 bg-blue-50/60 shadow-xs ring-1 ring-blue-300/50 backdrop-blur-md"
+                      : "border-white/80 bg-white/70 backdrop-blur-md shadow-2xs"
                   }`}
                 >
-                  <p className="text-sm font-semibold text-slate-900 mb-3">
+                  <p className="text-xs sm:text-sm font-semibold text-[#0f2942] mb-3">
                     <span className="text-slate-400 mr-2 font-mono text-xs">
                       #{idx + 1}
                     </span>
                     I see myself as:{" "}
-                    <span className="text-[#0f766e] font-bold">{trait}</span>
+                    <span className="text-[#2b64ab] font-extrabold">{trait}</span>
                   </p>
 
                   <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
@@ -85,13 +85,13 @@ export function TipiStep() {
                           key={scale.val}
                           type="button"
                           onClick={() => setTipi(itemKey, scale.val)}
-                          className={`py-2 px-1 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                          className={`py-2 px-1 rounded-[14px] text-xs font-bold border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
                             isChosen
-                              ? "bg-[#0f766e] text-white border-[#0f766e] shadow-xs"
-                              : "bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                              ? "bg-[#2b64ab] text-white border-[#2b64ab] shadow-md shadow-blue-900/20"
+                              : "bg-white/80 backdrop-blur-sm text-slate-700 border-white/90 hover:bg-white shadow-2xs"
                           }`}
                         >
-                          <span className="font-bold text-sm sm:text-base">
+                          <span className="font-extrabold text-sm sm:text-base">
                             {scale.val}
                           </span>
                           <span className="text-[9px] hidden md:inline leading-tight line-clamp-1">
@@ -117,4 +117,3 @@ export function TipiStep() {
     </div>
   );
 }
-

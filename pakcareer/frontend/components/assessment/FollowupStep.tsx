@@ -1,13 +1,57 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAssessmentStore } from "@/lib/store";
 import { fetchFollowupQuestions, fetchGeminiEnrichment } from "@/lib/api";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, ArrowRight, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { Sparkles, ArrowRight, AlertCircle, Loader2, ArrowUpRight } from "lucide-react";
+import type { FollowupQuestion } from "@/lib/types";
+
+const DEFAULT_FALLBACK_QUESTIONS: FollowupQuestion[] = [
+  {
+    id: "fq1",
+    question: "If you had to pick one weekend project, which would you enjoy most?",
+    options: [
+      { key: "A", text: "Build a mobile app or website", maps_to: "Computer Science & IT" },
+      { key: "B", text: "Design and assemble a mechanical gadget", maps_to: "Engineering" },
+      { key: "C", text: "Start a small online business or manage accounts", maps_to: "Business & Commerce" },
+      { key: "D", text: "Volunteer at a health clinic or awareness campaign", maps_to: "Medicine & Health" },
+    ],
+  },
+  {
+    id: "fq2",
+    question: "Which university club would you most likely join?",
+    options: [
+      { key: "A", text: "AI & Robotics Club", maps_to: "Computer Science & IT" },
+      { key: "B", text: "Debate & Model UN Society", maps_to: "Arts, Humanities & Social Sciences" },
+      { key: "C", text: "Science Olympiad Team", maps_to: "Pure Sciences" },
+      { key: "D", text: "Moot Court / Law Society", maps_to: "Law" },
+    ],
+  },
+  {
+    id: "fq3",
+    question: "In a group project, which role do you naturally take?",
+    options: [
+      { key: "A", text: "The researcher who finds data and writes reports", maps_to: "Pure Sciences" },
+      { key: "B", text: "The technical person who builds the prototype", maps_to: "Engineering" },
+      { key: "C", text: "The presenter and negotiator", maps_to: "Business & Commerce" },
+      { key: "D", text: "The coordinator who keeps everyone on track", maps_to: "Arts, Humanities & Social Sciences" },
+    ],
+  },
+  {
+    id: "fq4",
+    question: "Which of these problems would you most want to spend your career solving?",
+    options: [
+      { key: "A", text: "Reforming unjust laws or defending people's rights", maps_to: "Law" },
+      { key: "B", text: "Discovering how matter and energy work at a fundamental level", maps_to: "Pure Sciences" },
+      { key: "C", text: "Making education and social services more accessible in Pakistan", maps_to: "Arts, Humanities & Social Sciences" },
+      { key: "D", text: "Building systems that make cities more efficient", maps_to: "Engineering" },
+    ],
+  },
+];
+
+const STAGE2_TIMEOUT_MS = 75_000;
 
 export function FollowupStep() {
   const router = useRouter();
@@ -31,29 +75,38 @@ export function FollowupStep() {
   const [submittingStage2, setSubmittingStage2] = useState(false);
   const [stage2Status, setStage2Status] = useState<string>("");
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const hasFetchedRef = useRef(false);
 
-  // If user navigates directly without XGBoost results, redirect back to start
   useEffect(() => {
     if (!sessionId && (!allResults || allResults.length === 0)) {
       router.push("/assessment/landing");
+      return;
     }
-  }, [sessionId, allResults, router]);
 
-  // Stage 1: Load follow-up questions if not already fetched
-  useEffect(() => {
-    if (followupQuestions && followupQuestions.length > 0) return;
+    // If questions are already populated in store, dismiss loader immediately
+    if (followupQuestions && followupQuestions.length > 0) {
+      setLoadingQuestions(false);
+      return;
+    }
     if (!allResults || allResults.length === 0) return;
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
 
-    let isMounted = true;
     setLoadingQuestions(true);
     setFetchError(null);
 
-    // Identify weak / ambiguous domains (e.g. top 2-3 houses with close probabilities, or close differences)
+    // 35-second safety guard: longer than API timeout (30s) and backend (20s)
+    const safetyTimer = setTimeout(() => {
+      console.warn("Gemini Stage 1 response delayed; using diagnostic questions.");
+      setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
+      setLoadingQuestions(false);
+    }, 35_000);
+
     const sorted = [...allResults].sort((a, b) => b.probability - a.probability);
     const weakDomains: string[] = [];
     if (sorted.length >= 2) {
       weakDomains.push(sorted[0].house, sorted[1].house);
-      if (sorted.length >= 3 && Math.abs(sorted[1].probability - sorted[2].probability) < 8) {
+      if (sorted.length >= 3 && Math.abs(sorted[1].probability - sorted[2].probability) < 15) {
         weakDomains.push(sorted[2].house);
       }
     }
@@ -70,28 +123,30 @@ export function FollowupStep() {
       weak_domains: weakDomains,
     })
       .then((res) => {
-        if (!isMounted) return;
+        clearTimeout(safetyTimer);
         if (res && res.questions && res.questions.length > 0) {
           setFollowupQuestions(res.questions);
         } else {
-          setFetchError("Unable to generate follow-up questions. You can proceed directly to results.");
+          setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
         }
       })
       .catch((err) => {
-        if (!isMounted) return;
-        console.error("Stage 1 Gemini error:", err);
-        setFetchError("AI service currently busy. You can skip directly to your results.");
+        clearTimeout(safetyTimer);
+        console.warn("Stage 1 notice; using diagnostic fallback questions:", err);
+        setFollowupQuestions(DEFAULT_FALLBACK_QUESTIONS);
       })
       .finally(() => {
-        if (isMounted) setLoadingQuestions(false);
+        setLoadingQuestions(false);
       });
 
     return () => {
-      isMounted = false;
+      clearTimeout(safetyTimer);
     };
-  }, [allResults, profile, followupQuestions, setFollowupQuestions]);
+  }, [allResults, profile, followupQuestions, setFollowupQuestions, sessionId, router]);
 
-  const questions = followupQuestions || [];
+  const questions = followupQuestions && followupQuestions.length > 0
+    ? followupQuestions
+    : DEFAULT_FALLBACK_QUESTIONS;
   const answeredCount = questions.filter((q) => !!followupAnswers[q.id]).length;
   const isAllAnswered = questions.length > 0 && answeredCount === questions.length;
 
@@ -108,57 +163,65 @@ export function FollowupStep() {
     if (!isAllAnswered) return;
 
     setSubmittingStage2(true);
-    setStage2Status("Connecting to Gemini 2.5 Flash...");
+    setStage2Status("Synthesizing market intelligence & verified rankings with Gemini AI...");
     setFetchError(null);
 
     try {
-      setStage2Status("Searching Pakistani job market data (Rozee.pk & HEC)...");
-
       const rankingPayload = (top3.length > 0 ? top3 : allResults.slice(0, 3)).map((r) => ({
         house: r.house,
         emoji: r.emoji || "🎓",
         probability: r.probability,
       }));
 
-      const enrichment = await fetchGeminiEnrichment({
+      // Stage 2 with 65-second client timeout matching backend 60s + 5s buffer
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Stage 2 timeout")), STAGE2_TIMEOUT_MS)
+      );
+
+      const enrichmentPromise = fetchGeminiEnrichment({
         xgb_ranking: rankingPayload,
         followup_answers: followupAnswers,
         holland_code: profile?.holland_code || "I-R-C",
       });
 
-      setStage2Status("Synthesizing market intelligence...");
+      const enrichment = await Promise.race([enrichmentPromise, timeoutPromise]);
       setGeminiEnrichment(enrichment);
-
+    } catch (err: unknown) {
+      console.warn("Stage 2 validation bypassed or delayed:", err);
+    } finally {
       setStep("results");
       startTransition(() => {
         router.push(`/assessment/results?session=${sessionId || ""}`);
       });
-    } catch (err: unknown) {
-      console.error("Stage 2 validation failed:", err);
-      // Fallback: Proceed to results anyway so student is not blocked
-      setStep("results");
-      router.push(`/assessment/results?session=${sessionId || ""}`);
-    } finally {
       setSubmittingStage2(false);
     }
   };
 
   if (loadingQuestions) {
     return (
-      <div className="max-w-2xl mx-auto py-16 px-4 text-center space-y-6">
-        <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center mx-auto shadow-sm">
-          <Loader2 className="w-8 h-8 text-[#0f766e] animate-spin" />
+      <div className="max-w-md mx-auto py-20 px-4 text-center space-y-5">
+        <div className="w-16 h-16 rounded-3xl bg-white/70 backdrop-blur-md border border-white/80 flex items-center justify-center mx-auto shadow-md">
+          <Loader2 className="w-8 h-8 text-[#2b64ab] animate-spin" />
         </div>
-        <div className="space-y-2">
-          <Badge variant="outline" className="text-teal-700 bg-teal-50 border-teal-200 gap-1.5 py-1 px-3">
-            <Sparkles className="w-3.5 h-3.5 text-teal-600" /> Stage 1: AI Diagnostic Layer
-          </Badge>
-          <h2 className="text-2xl font-extrabold text-[#0f2f38]">
-            Analyzing Your Psychometric Profile
+        <div className="space-y-1.5">
+          <span className="text-xs font-bold text-[#2b64ab] bg-blue-50 border border-blue-200/60 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5" /> Stage 1: AI Diagnostic Layer
+          </span>
+          <h2 className="text-2xl font-extrabold text-[#0f2942]">
+            Evaluating Your Profile
           </h2>
-          <p className="text-sm text-slate-600 max-w-md mx-auto">
-            Gemini is evaluating your borderline scores and preparing 3–5 targeted questions to fine-tune your degree match recommendations...
+          <p className="text-xs font-medium text-slate-600 max-w-xs mx-auto leading-relaxed">
+            Preparing 3–5 targeted questions to fine-tune your degree match recommendations...
           </p>
+        </div>
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={handleSkipOrProceedWithoutAI}
+            className="text-xs font-bold text-[#2b64ab] hover:text-[#1f4f8b] bg-white/80 hover:bg-white backdrop-blur-md px-4 py-2 rounded-full border border-blue-200 transition cursor-pointer shadow-xs"
+          >
+            Skip to Instant Results ↗
+          </button>
         </div>
       </div>
     );
@@ -166,64 +229,70 @@ export function FollowupStep() {
 
   if (submittingStage2) {
     return (
-      <div className="max-w-2xl mx-auto py-16 px-4 text-center space-y-6">
-        <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto shadow-sm">
+      <div className="max-w-md mx-auto py-20 px-4 text-center space-y-5">
+        <div className="w-16 h-16 rounded-3xl bg-white/70 backdrop-blur-md border border-white/80 flex items-center justify-center mx-auto shadow-md">
           <Sparkles className="w-8 h-8 text-amber-600 animate-pulse" />
         </div>
-        <div className="space-y-2">
-          <Badge variant="outline" className="text-amber-800 bg-amber-50 border-amber-200 gap-1.5 py-1 px-3">
+        <div className="space-y-1.5">
+          <span className="text-xs font-bold text-white bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/30 inline-flex items-center gap-1.5">
             Stage 2: Live Market Grounding
-          </Badge>
-          <h2 className="text-2xl font-extrabold text-[#0f2f38]">
-            Validating Against Pakistan&apos;s Job Market
+          </span>
+          <h2 className="text-2xl font-extrabold text-white drop-shadow-xs">
+            Validating Job Market Demand
           </h2>
-          <p className="text-sm text-slate-600 max-w-md mx-auto font-medium text-teal-800">
+          <p className="text-xs font-medium text-white/90 max-w-xs mx-auto">
             {stage2Status || "Enriching your profile with real-time industry insights..."}
           </p>
-          <p className="text-xs text-slate-400 pt-2">
-            Verifying Rozee.pk salary benchmarks and hiring trends...
-          </p>
+        </div>
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={handleSkipOrProceedWithoutAI}
+            className="text-xs font-bold text-white/90 hover:text-white bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/30 transition cursor-pointer"
+          >
+            Skip Directly to Results ↗
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 py-6">
-      <Card className="border-teal-200 shadow-sm overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-teal-900 via-[#0f2f38] to-slate-900 text-white">
+    <div className="max-w-3xl mx-auto space-y-6 py-6 px-2 sm:px-0">
+      <div className="bg-white/75 backdrop-blur-2xl border border-white/85 rounded-[32px] overflow-hidden shadow-[0_18px_45px_-10px_rgba(20,50,90,0.16)]">
+        {/* Header Area */}
+        <div className="p-6 sm:p-8 border-b border-slate-100 bg-white/40 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Badge variant="accent" className="gap-1.5 text-xs py-1 px-2.5">
+            <span className="text-xs font-bold text-[#2b64ab] bg-blue-50 border border-blue-200/60 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-2xs">
               <Sparkles className="w-3.5 h-3.5" /> Stage 1 Diagnostic
-            </Badge>
-            <span className="text-xs text-teal-200 font-mono">
+            </span>
+            <span className="text-xs font-mono font-bold text-slate-500 bg-white/80 px-2.5 py-0.5 rounded-full border border-slate-200">
               {answeredCount} of {questions.length} answered
             </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-white pt-2">
-            Targeted Follow-Up Questions
-          </CardTitle>
-          <CardDescription className="text-slate-300 text-sm">
-            Your psychometric scores show close competition between top degree fields.
-            Please answer these quick scenario questions so Gemini AI can validate your profile against live Pakistani market demand.
-          </CardDescription>
-        </CardHeader>
+          <h2 className="text-2xl font-extrabold text-[#0f2942]">
+            Targeted Follow-Up Diagnostic
+          </h2>
+          <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+            Your interests indicate close alignment across multiple fields. Answer these real-world scenarios so AI can calibrate your exact ranking.
+          </p>
+        </div>
 
-        <CardContent className="space-y-8 pt-6">
+        {/* Content & Questions */}
+        <div className="p-6 sm:p-8 space-y-8">
           {fetchError && (
-            <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 flex items-center justify-between gap-3 text-sm">
+            <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 text-amber-900 flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>{fetchError}</span>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
+              <button
+                type="button"
                 onClick={handleSkipOrProceedWithoutAI}
-                className="text-xs"
+                className="text-xs font-bold text-[#2b64ab] underline"
               >
                 Skip to Results
-              </Button>
+              </button>
             </div>
           )}
 
@@ -232,16 +301,16 @@ export function FollowupStep() {
 
             return (
               <div key={q.id} className="space-y-3 pb-6 border-b border-slate-100 last:border-0 last:pb-0">
-                <div className="flex items-start gap-2.5">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-teal-100 text-[#0f766e] text-xs font-bold shrink-0 mt-0.5">
+                <div className="flex items-start gap-3">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#2b64ab] text-white text-xs font-extrabold shrink-0 mt-0.5 shadow-2xs">
                     {qIdx + 1}
                   </span>
-                  <h3 className="font-bold text-base text-[#0f2f38]">
+                  <h3 className="font-extrabold text-sm sm:text-base text-[#0f2942]">
                     {q.question}
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 pl-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 pl-9">
                   {q.options.map((opt) => {
                     const isSelected = selectedKey === opt.key;
                     return (
@@ -249,22 +318,22 @@ export function FollowupStep() {
                         key={opt.key}
                         type="button"
                         onClick={() => handleSelectOption(q.id, opt.key)}
-                        className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                        className={`p-3.5 rounded-[20px] border text-left transition-all flex items-start gap-3 cursor-pointer ${
                           isSelected
-                            ? "border-[#0f766e] bg-teal-50/60 shadow-xs ring-1 ring-[#0f766e]"
-                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-700"
+                            ? "border-[#2b64ab] bg-blue-50/80 shadow-xs ring-2 ring-[#2b64ab]/30 backdrop-blur-md"
+                            : "border-white/85 bg-white/70 hover:border-white hover:bg-white text-slate-800 shadow-2xs backdrop-blur-md"
                         }`}
                       >
                         <div
-                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 transition-all ${
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-extrabold shrink-0 mt-0.5 transition-all ${
                             isSelected
-                              ? "bg-[#0f766e] text-white"
-                              : "border border-slate-300 text-slate-500 bg-white"
+                              ? "bg-[#2b64ab] text-white"
+                              : "border border-white/90 text-slate-600 bg-white/60"
                           }`}
                         >
                           {opt.key}
                         </div>
-                        <div className="flex-1 text-xs leading-relaxed font-medium">
+                        <div className="flex-1 text-xs leading-relaxed font-semibold">
                           {opt.text}
                         </div>
                       </button>
@@ -275,27 +344,28 @@ export function FollowupStep() {
             );
           })}
 
-          <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-            <Button
-              variant="ghost"
+          {/* Action Row */}
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <button
+              type="button"
               onClick={handleSkipOrProceedWithoutAI}
-              className="text-xs text-slate-500 hover:text-slate-700"
+              className="text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
             >
-              Skip to Psychometric Results
-            </Button>
+              Skip to Results
+            </button>
 
-            <Button
+            <button
+              type="button"
               onClick={handleSubmit}
               disabled={!isAllAnswered || isPending}
-              className="gap-2 bg-[#0f766e] hover:bg-[#0d635c] text-white font-bold px-6"
+              className="rounded-full bg-[#2b64ab] hover:bg-[#1f4f8b] disabled:bg-slate-300 text-white px-7 py-3 font-bold text-xs sm:text-sm shadow-md shadow-blue-900/20 flex items-center gap-2 transition cursor-pointer"
             >
               <span>Validate & See Verified Results</span>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
-

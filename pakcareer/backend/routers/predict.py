@@ -75,7 +75,7 @@ class AssessmentPayload(BaseModel):
     familysize: int = Field(..., ge=0, le=20)
     urban_label: str = Field(..., max_length=64, description="Must match an URBAN_OPTIONS key.")
     engnat_label: str = Field(..., max_length=64, description="Must match an ENGNAT_OPTIONS key.")
-    invite_code: str | None = Field(None, max_length=32, description="Org invite code for counsellor dashboard.")
+    invite_code: str = Field(..., min_length=2, max_length=32, description="Mandatory school / counsellor invite code.")
 
     @field_validator("riasec")
     @classmethod
@@ -161,13 +161,19 @@ def run_prediction(payload: AssessmentPayload, db: DBSession = Depends(get_db)) 
     engnat_code = ENGNAT_OPTIONS[payload.engnat_label]
     edu_code = EDU_MAP[payload.education]
 
-    # Invite codes are created by an admin; reject unknown ones up front so a
-    # student is never told they are linked to a school when they are not.
-    org_code = None
-    if payload.invite_code and payload.invite_code.strip():
-        org_code = payload.invite_code.strip().upper()
-        if db.query(Org).filter_by(invite_code=org_code).first() is None:
-            raise HTTPException(status_code=400, detail=f"Unknown invite code: {org_code}")
+    # Mandatory invite code verification: anonymous / un-coded access is strictly blocked.
+    if not payload.invite_code or not payload.invite_code.strip():
+        raise HTTPException(
+            status_code=403,
+            detail="A valid school or counsellor invite code is required to take this assessment."
+        )
+    org_code = payload.invite_code.strip().upper()
+    org_match = db.query(Org).filter_by(invite_code=org_code).first()
+    if org_match is None:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Invalid invite code '{org_code}'. You must enter a registered school or counsellor invite code."
+        )
 
     # 3. Feature engineering
     feature_row = build_feature_row(
