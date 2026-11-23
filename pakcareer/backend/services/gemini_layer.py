@@ -45,19 +45,22 @@ def _load_api_key() -> str:
 
 _API_KEY = _load_api_key()
 _client: genai.Client | None = None
+_client_api_key: str = ""
 
 
 def _get_client() -> genai.Client | None:
-    global _client, _API_KEY
+    global _client, _client_api_key, _API_KEY
     key = os.environ.get("GEMINI_API_KEY", "") or _API_KEY or _load_api_key()
     if not key:
         return None
-    if _client is None:
+    if _client is None or _client_api_key != key:
         _client = genai.Client(api_key=key)
+        _client_api_key = key
     return _client
 
 FLASH_MODELS = [
-    os.environ.get("GEMINI_MODEL", "gemini-3.6-flash"),
+    os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite"),
+    "gemini-3.6-flash",
     "gemini-3.8-flash",
 ]
 
@@ -187,11 +190,13 @@ Return ONLY the JSON object as specified.
                     system_instruction=FOLLOWUP_SYSTEM_PROMPT,
                     response_mime_type="application/json",
                     thinking_config=types.ThinkingConfig(thinking_level="low"),
-                    http_options=types.HttpOptions(timeout=20_000),
+                    http_options=types.HttpOptions(timeout=15_000),
                 ),
             )
-            raw_text = response.text or ""
-            result = json.loads(raw_text)
+            raw_text = _extract_text_from_response(response)
+            if not raw_text:
+                raise ValueError("Gemini returned an empty response")
+            result = json.loads(_extract_json(raw_text))
             if "questions" in result and isinstance(result["questions"], list):
                 return result
         except Exception as exc:
