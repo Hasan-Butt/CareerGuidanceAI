@@ -12,6 +12,8 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{amsmath}
 \usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
 
 \graphicspath{{figures/}}
 \setlist{nosep, leftmargin=*}
@@ -45,9 +47,9 @@ Kaggle career datasets and excluded all of them from training: six have random l
 the target and three are too small or unlabelled. After cleaning, the modelling table holds
 81,256 labelled respondents with 30 engineered, scaled and encoded features. The final XGBoost
 model (500 trees, 88 features) achieves 57.1\% top-1 and 86.4\% top-3 accuracy with macro-F1
-0.358 on 16,252 held-out students. The model is deployed as a REST API (FastAPI) with a Next.js
-frontend, an institutional counsellor dashboard, and a downloadable parents' PDF report backed by
-ILOSTAT earnings and Rozee.pk job-demand data.
+0.358 on 16,252 held-out students. The model is deployed behind a REST API with a web front end,
+an optional language-model layer that generates follow-up questions and attaches labour-market
+context, and a portal that gives counsellors structured access to student results.
 \end{abstract}
 
 % ------------------------------------------------------------------
@@ -504,7 +506,7 @@ Gradient boosting, 30 features & 53.0\% & 73.0\% & 83.4\% & 0.28 \\
 \input{phase3_4_sections}
 
 % ------------------------------------------------------------------
-\section{Challenges and Limitations}
+\section{Challenges and Limitations}\label{sec:limitations}
 \begin{itemize}
 \item \textbf{Label noise.} Majors are self-reported free text, and some respondents are students
       who may still switch. The keyword mapping is transparent and testable, but imperfect.
@@ -515,6 +517,19 @@ Gradient boosting, 30 features & 53.0\% & 73.0\% & 83.4\% & 0.28 \\
       requested, would allow degree-level figures.
 \item \textbf{Salaries on Rozee.pk} are hidden behind a login for most postings, so salary comes
       only from ILO data.
+\item \textbf{Unevaluated language-model layer.} The LLM layer has not been
+      evaluated against a ground truth. Its adjusted confidences are
+      presentation-layer signals; a controlled comparison of ranking
+      quality with and without follow-up answers is future work.
+\item \textbf{Dependence on an external API.} Stage~1 and Stage~2 depend on
+      third-party availability, rate limits and model versions. The static
+      fallback keeps the system usable but offers less personalisation.
+\item \textbf{Prototype access control.} The counsellor portal uses
+      institution invite codes rather than individual authentication.
+      A production deployment requires per-counsellor accounts, role-based
+      access and a consent and retention policy for student data.
+\item \textbf{Wording constraint.} RIASEC item wording is fixed by the
+      training data and skews biological in the Investigative scale.
 \item \textbf{Domain shift mitigation (partial).} The deployed system stores each assessment
       with demographics and raw item responses. Sessions from Pakistani students could seed a
       future fine-tuning dataset once enough accumulate, addressing the small Pakistani sample
@@ -523,20 +538,23 @@ Gradient boosting, 30 features & 53.0\% & 73.0\% & 83.4\% & 0.28 \\
       wizard does not yet ask for.
 \end{itemize}
 
-\section{Next Steps}
+\section{Next Steps}\label{sec:nextsteps}
 \subsection*{Completed}
 The XGBoost model is deployed behind a FastAPI REST API with a Next.js frontend. The six-step
-assessment wizard, institutional counsellor dashboard, cohort analytics and downloadable parents'
+assessment wizard, optional language-model layer, institutional counsellor dashboard, cohort analytics and downloadable parents'
 PDF report are working end to end (Phase~5, Section~\ref{sec:phase5}).
 
 \subsection*{Remaining}
 \begin{enumerate}
+  \item \textbf{Evaluate the follow-up questions:} measure whether follow-up answers
+        improve top-1 agreement with the student's eventual field.
+  \item \textbf{Replace invite-code access:} introduce authenticated counsellor accounts,
+        audit logging and an explicit consent flow for student data.
+  \item \textbf{Collect Pakistani survey responses and retrain:} incorporate local survey
+        responses once sample thresholds are met; consider locally worded interest items.
   \item \textbf{Task-based career simulations:} behavioural features beyond self-report
         Likert scales, targeting the minority-class recall failures in Table~\ref{tab:recall}
         (Law 0.9\%, CS\,\&\,IT 12.0\%).
-  \item \textbf{Pakistani survey incorporation:} once the Google Form has at least 500
-        responses, retrain with Pakistani rows up-weighted and repeat the bias check
-        (Section~\ref{sec:bias}).
   \item \textbf{Class-balanced model option:} offer the balanced variant (macro-F1 0.382,
         Law recall 17.6\%) as a counsellor setting for institutions that value finding
         minority-house students over top-1 accuracy.

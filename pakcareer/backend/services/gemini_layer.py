@@ -59,7 +59,7 @@ def _get_client() -> genai.Client | None:
     return _client
 
 FLASH_MODELS = [
-    os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite"),
+    os.environ.get("GEMINI_MODEL", "gemini-3.6-flash"),
     "gemini-3.6-flash",
     "gemini-3.8-flash",
 ]
@@ -160,9 +160,8 @@ def generate_followup_questions(
     Returns:
         dict with "questions" key containing list of question objects
     """
-    global _quota_cooldown_until
     client = _get_client()
-    if not client or time.time() < _quota_cooldown_until:
+    if not client:
         return _fallback_questions()
 
     if not weak_domains:
@@ -201,10 +200,6 @@ Return ONLY the JSON object as specified.
                 return result
         except Exception as exc:
             log.warning("Gemini Stage 1 error with %s: %s", model_name, exc)
-            if _is_quota_error(exc):
-                _quota_cooldown_until = time.time() + 300
-                log.info("Gemini quota or connection error; fast-failing to instant diagnostic questions.")
-                break
             continue
 
     log.info("Using smart diagnostic fallback questions for Stage 1")
@@ -326,9 +321,8 @@ def validate_and_enrich(
     Returns:
         dict with adjusted_ranking, market_data, narratives, validation_summary, data_sources
     """
-    global _quota_cooldown_until
     client = _get_client()
-    if not client or time.time() < _quota_cooldown_until:
+    if not client:
         return _fallback_enrichment(xgb_ranking)
 
     user_content = f"""
@@ -376,10 +370,6 @@ Please:
                 return result
         except Exception as exc:
             log.warning("Gemini Stage 2 error with %s: %s", model_name, exc)
-            if _is_quota_error(exc):
-                _quota_cooldown_until = time.time() + 300
-                log.info("Gemini quota or connection error; fast-failing to verified market intelligence.")
-                break
             continue
 
     log.info("Using verified market fallback intelligence for Stage 2")

@@ -380,8 +380,9 @@ Muhammad Hasan Butt (24L-3022)
   & \texttt{data\_scripts/evaluate\_\allowbreak supplementary.py}, \texttt{baseline\_models.py} & Supplementary-dataset test, Phase~2 baselines \\
   & \texttt{src/models/model.py}, \texttt{src/models/train.py} & Model architectures, XGBoost training, loss curves \\
   & \texttt{report/phase3\_4\_sections.tex} & Phase 3--4 report sections \\
-  & \texttt{app/} & Streamlit prototype (predictor, questions, PDF report) \\
-  & \texttt{pakcareer/} & Next.js + FastAPI application, dashboard, Docker setup \\
+  & \texttt{pakcareer/backend/} & FastAPI REST service, XGBoost predictor loading, Docker Compose \\
+  & \texttt{pakcareer/backend/\allowbreak services/\allowbreak gemini\_layer.py} & Gemini diagnostic follow-up \& search-grounded market enrichment \\
+  & \texttt{pakcareer/frontend/} & Next.js assessment wizard, counsellor portal, Recharts integration \\
 \midrule
 Kabeer Ahmed Shahzeb (24L-3087)
   & \texttt{README.md}, \texttt{requirements.txt}, \texttt{.gitignore} & Project setup \\
@@ -390,9 +391,9 @@ Kabeer Ahmed Shahzeb (24L-3087)
   & \texttt{src/evaluation/evaluate.py} & Top-$k$ accuracy, AUC-ROC, confusion matrix \\
   & \texttt{src/models/train.py} (fix) & Restored shared helpers; excluded sensitive columns \\
   & \texttt{report/main.tex} & Report integration and this table \\
-  & \texttt{pakcareer/backend/} (security, tests) & Counsellor access keys, input validation, API tests \\
-  & \texttt{pakcareer/frontend/} (fixes) & Training item wording, invite-code check, dashboard sign-in \\
-  & \texttt{report/phase5\_sections.tex} & Phase 5 report section \\
+  & \texttt{pakcareer/backend/} (security, tests) & Counsellor access keys, input validation, 15 API tests \\
+  & \texttt{pakcareer/frontend/} (fixes) & Training item wording fidelity, invite-code check, auth guard \\
+  & \texttt{report/phase5\_sections.tex} & Phase 5 architecture, TikZ flow diagram, and deployment report \\
 \midrule
 Muhammad Moosa Khan Rokhri (24L-3070)
   & \texttt{survey/} & Pakistani student survey specification \\

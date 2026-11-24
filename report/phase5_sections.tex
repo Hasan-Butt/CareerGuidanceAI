@@ -2,177 +2,165 @@
 %  PHASE 5: SYSTEM ARCHITECTURE & DEPLOYMENT
 % ============================================================
 
-\section{Phase 5: System Architecture \& Deployment}\label{sec:phase5}
+\section{Phase 5: System Architecture and Deployment}
+\label{sec:architecture}\label{sec:phase5}
 
-\subsection{Architecture Overview}
+The Phase~3--4 model is deployed as a three-tier web application with an
+optional language-model layer and an institutional portal for counsellors.
+The classifier itself is unchanged: \texttt{predictor.py}, the 88-feature
+schema and the fitted scaler statistics are used verbatim.
 
-The XGBoost classifier is served by a three-tier web application
-(\texttt{pakcareer/} in the repository), which replaces the earlier
-single-file Streamlit prototype (\texttt{app/}):
-
+\subsection{Three-Tier Architecture}
 \begin{itemize}
-  \item \textbf{Frontend:} Next.js~16 (React~19, App Router) with Tailwind
-        CSS~v4, Recharts for charts and Zustand for wizard state.
-  \item \textbf{Backend:} FastAPI (Python) exposing a REST API. The
-        prototype's \texttt{predictor.py} (feature construction and
-        inference) and \texttt{report\_pdf.py} (parents' report) are reused
-        unchanged; \texttt{questions.py} is reused with label mappings added
-        for the new frontend.
-  \item \textbf{Database:} SQLAlchemy ORM. Local development uses SQLite
-        with no setup; the Docker stack uses PostgreSQL~16. Session results
-        are stored in JSON columns (JSONB on PostgreSQL), which the cohort
-        analytics endpoint aggregates.
+  \item \textbf{Frontend:} Next.js (React, App Router) with Tailwind CSS and
+        Recharts. A public landing page, the student assessment wizard and the
+        counsellor portal are routes of one application.
+  \item \textbf{Backend:} FastAPI (Python). It loads the XGBoost model and label
+        encoder once at startup and exposes a REST API. Pydantic schemas
+        validate every request before it reaches the model.
+  \item \textbf{Database:} PostgreSQL via SQLAlchemy (SQLite for local
+        development). Predictions, demographics, raw item responses and
+        counsellor notes are stored per session, with the probability tables
+        stored as JSON columns to support cohort-level aggregation.
+\end{itemize}
+The services are containerised with Docker Compose (PostgreSQL, FastAPI,
+Next.js).
+
+\subsection{Request Flow and the Gemini Layer}
+Figure~\ref{fig:flow} shows the end-to-end flow. The XGBoost model remains the
+sole source of the degree-family probabilities. A hosted language model
+(a hosted Gemini Flash model, called through the Google GenAI API) is inserted between the
+model output and the results page for two purposes that the classifier cannot
+serve: generating diagnostic questions and attaching Pakistan-specific market
+context.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+  node distance=5mm and 7mm,
+  box/.style={draw, rounded corners, align=center, minimum height=9mm,
+              minimum width=21mm, font=\footnotesize},
+  llm/.style={box, fill=blue!8},
+  arr/.style={-{Stealth[length=2mm]}, thick}]
+  \node[box] (a) {Student\\answers};
+  \node[box, right=of a] (b) {XGBoost\\7 probabilities};
+  \node[llm, right=of b] (c) {Stage 1\\follow-up\\questions};
+  \node[llm, right=of c] (d) {Stage 2\\validation +\\market data};
+  \node[box, right=of d] (e) {Results +\\PDF report};
+  \draw[arr] (a) -- (b);
+  \draw[arr] (b) -- (c);
+  \draw[arr] (c) -- (d);
+  \draw[arr] (d) -- (e);
+\end{tikzpicture}
+\caption{Request flow. Shaded blocks are the language-model layer; the
+         classifier output is passed through read-only.}
+\label{fig:flow}
+\end{figure}
+
+\paragraph{Stage 1: targeted follow-up questions.}
+The model receives the ranked probabilities, the Holland code and the houses
+whose probabilities lie close to the top match, and returns 3--5
+scenario-based multiple-choice questions. Each option is tagged with the
+degree family it signals. The motivation comes from Table~\ref{tab:recall}: the classifier
+confuses houses with overlapping interest profiles, and fixed RIASEC items
+cannot be changed because the trees were fitted to their exact wording.
+Follow-up questions probe those ambiguous houses without altering the
+model's inputs.
+
+\paragraph{Stage 2: validation and market enrichment.}
+The model receives the top-ranked houses and the follow-up answers and
+returns (i)~an adjusted confidence for each house, (ii)~a short narrative per
+top house and (iii)~market indicators (typical starting salary, common roles,
+major employers, approximate openings). Stage~2 is configured to use search
+grounding so that market figures come from retrieved web sources rather than
+from the model's memory.
+
+\paragraph{Design constraints.}
+\begin{itemize}
+  \item The classifier is never retrained or modified by the LLM layer. The
+        XGBoost probability is always displayed next to any adjusted value;
+        the adjustment is a presentation-layer signal only, bounded to
+        0--100\% and to at most two rank positions.
+  \item Every LLM response is tagged with its provenance
+        (\texttt{gemini}, \texttt{gemini\_\allowbreak grounded} or
+        \texttt{static\_\allowbreak fallback}), and the interface labels reference data
+        as such. This prevents static figures from being presented as live
+        results.
+  \item The layer degrades gracefully. If the API is rate-limited, slow or
+        unavailable, the system falls back to a curated question bank and to
+        the static benchmarks of Section~\ref{sec:eda-pk}, so the assessment
+        always completes.
+  \item Market data is identical for all students in a house, so grounded
+        lookups are cached per house rather than repeated per student. This
+        keeps cost and rate-limit exposure low.
+  \item Only derived values are sent to the external API: probabilities, the
+        Holland code and multiple-choice answers. No names, contact details
+        or free text are transmitted.
 \end{itemize}
 
-The model and label encoder are loaded once when the API starts. On a
-laptop CPU, model inference takes a median of 9\,ms per student, and a
-complete \texttt{POST /api/predict} request (feature construction,
-inference and database write) takes a median of 16\,ms
-(200 and 100 timed calls respectively).
+\subsection{Counsellor Portal}
+Career counselling is rare in Pakistani colleges (Section~1), and a counsellor
+who does meet a student has no structured starting point. The portal turns
+each completed assessment into a case file. A student receives a short
+session identifier and shares it with the counsellor, or links the session to
+an institution through an invite code. The portal then provides:
+\begin{itemize}
+  \item \textbf{Cohort overview:} the number of sessions, mean top-1 fit,
+        most common Holland codes and a filterable, searchable session table
+        for a school, college or counselling centre.
+  \item \textbf{Session detail:} the Holland code and differentiation score,
+        RIASEC and Big Five profiles, the full seven-house probability
+        breakdown and the market summary, so the counsellor can start the
+        conversation from evidence instead of a blank page.
+  \item \textbf{Private notes:} counsellor notes saved against the session
+        and kept separate from what the student sees.
+  \item \textbf{Cohort analytics:} house distribution, Holland-code
+        frequencies and urban/rural breakdowns, useful to institutions
+        planning guidance programmes.
+  \item \textbf{Parents' report:} a one-click PDF of the parents' summary
+        for the family meeting.
+\end{itemize}
+Three demo institutions (a university, a school and a counselling centre) are
+seeded. The portal reduces preparation time for the counsellor; it is not a
+replacement for professional judgement, and its output is framed as a
+conversation starter (Section~\ref{sec:limitations}).
 
-\subsection{API Endpoints}
-
+\subsection{API Summary}
 \begin{table}[h]
 \centering
 \small
-\caption{FastAPI REST endpoints. ``Key'' means the request must carry the
-         institution's access key (Section~\ref{sec:security}).}
+\caption{REST endpoints of the FastAPI backend.}
 \label{tab:api}
-\begin{tabular}{llll}
-\toprule
-\textbf{Method} & \textbf{Route} & \textbf{Access} & \textbf{Function} \\
-\midrule
-POST  & \texttt{/api/predict}                 & Public & Validate answers, run inference, store session \\
-GET   & \texttt{/api/sessions}                & Key    & List the institution's sessions \\
-GET   & \texttt{/api/sessions/analytics}      & Key    & Cohort aggregate statistics \\
-GET   & \texttt{/api/sessions/\{id\}}         & Link / Key & Results only; full record with key \\
-PATCH & \texttt{/api/sessions/\{id\}/notes}   & Key    & Update counsellor notes \\
-GET   & \texttt{/api/sessions/\{id\}/pdf}     & Link   & Download the parents' PDF report \\
-GET   & \texttt{/api/orgs/\{code\}}           & Public & Check an invite code \\
-GET   & \texttt{/api/orgs/me}                 & Key    & Dashboard sign-in check \\
-POST  & \texttt{/api/orgs}                    & Admin  & Register an institution, issue its key \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Student Assessment Wizard}
-
-The six-step wizard replicates the Streamlit flow as typed React components.
-Answers are kept in the browser's session storage, so a page refresh does
-not lose progress.
-
-\begin{enumerate}
-  \item \textbf{Landing:} product overview and optional invite-code entry.
-  \item \textbf{About:} age, education, family size, urban/rural and English
-        nativeness. The invite code is checked here, so a student is not told
-        they are linked to a school when the code is wrong.
-  \item \textbf{RIASEC:} 48 items across 6 domains, one domain per page; the
-        next domain unlocks only when the current one is complete.
-  \item \textbf{TIPI:} 10 Big Five items on a 1--7 scale.
-  \item \textbf{Vocabulary:} the 16-word checklist, including the three
-        non-words used as a validity check.
-  \item \textbf{Results:} top-3 houses, the full 7-house probability chart,
-        the psychometric profile and a Pakistan careers and market tab.
-\end{enumerate}
-
-Each step is a Next.js dynamic route (\texttt{/assessment/[step]}). The
-browser sends the raw answers in one \texttt{POST /api/predict} call, and
-the server builds the 88-feature vector with the same transformations and
-fitted scaling parameters as training. We checked this on 2\,000 real
-respondents: the 30 engineered features computed by the API matched the
-training pipeline's values exactly.
-
-Because the 58 raw item answers are themselves model features, the wizard
-must show the exact item wording of the training data. Testing found that
-an early version of the frontend used reworded RIASEC items and a different
-vocabulary list, with the non-words in different positions from those
-scored by the backend. Both were replaced with the original items before
-this submission.
-
-\paragraph{Communicating uncertainty.} The model's first choice is right
-57\% of the time and its top three 86\% of the time
-(Table~\ref{tab:results}). The results page therefore labels each result as
-a \emph{clear lead} or a \emph{close call} (top two within 10 percentage
-points) and tells students to consider all three houses.
-
-\subsection{Institutional Counsellor Dashboard}
-
-The counsellor dashboard at \texttt{/dashboard} provides:
-\begin{itemize}
-  \item \textbf{Sessions:} KPI cards (number of assessments, most common
-        recommended house, average age) and a searchable table of the
-        institution's students.
-  \item \textbf{Session detail:} each student's psychometric profile and
-        predictions, private counsellor notes, and the PDF report.
-  \item \textbf{Analytics:} house distribution, the most frequent Holland
-        codes and the urban/rural split, from
-        \texttt{/api/sessions/analytics}.
-\end{itemize}
-Three demo institutions are created on first start: \texttt{FAST-LAHORE},
-\texttt{COUNSEL-DEMO} and \texttt{LGS-DEMO}.
-
-\subsection{Security and Privacy}\label{sec:security}
-
-The system stores minors' answers, so access is restricted as follows:
-\begin{itemize}
-  \item \textbf{Counsellor access keys.} Each institution has a secret key;
-        only its SHA-256 hash is stored. Dashboard requests send the key in
-        an \texttt{X-Org-Key} header, and the API returns only students who
-        used that institution's invite code. A counsellor cannot read or
-        edit another institution's sessions.
-  \item \textbf{Share links.} A student's result link uses the session's
-        random UUID and returns only the results, never the raw answers or
-        counsellor notes.
-  \item \textbf{Institutions.} Invite codes can only be created with an
-        operator key; unknown codes are rejected.
-  \item \textbf{Input validation.} The API rejects missing items,
-        out-of-range answers and unknown demographic options instead of
-        silently replacing them with defaults.
-  \item \textbf{Cross-origin access.} Only the configured frontend origin
-        may call the API from a browser.
-\end{itemize}
-
-\subsection{PDF Report Generation}
-
-The \texttt{report\_pdf.py} module (FPDF2) is exposed as a download
-endpoint. The report contains the student snapshot, the top-3 houses with
-example Pakistani degrees and Rozee.pk posting counts, ILO earnings and
-unemployment context, and the full 7-house probability table, written for
-parents.
-
-\subsection{Testing}
-
-\begin{itemize}
-  \item \textbf{API tests:} 15 automated tests (\texttt{pytest}) cover
-        prediction output, input validation, invite codes, access-key
-        scoping, share-link privacy, PDF generation and CORS.
-  \item \textbf{Frontend:} the production build (\texttt{npm run build})
-        compiles all 12 routes without errors.
-  \item \textbf{Dependencies:} \texttt{npm audit} and \texttt{pip-audit}
-        report no known vulnerabilities.
-  \item \textbf{End to end:} the full assessment was completed in a browser,
-        including an invalid invite code, the PDF download and the
-        counsellor dashboard.
-\end{itemize}
-
-\subsection{Containerisation \& Deployment}
-
-\begin{table}[h]
-\centering
-\small
-\caption{Docker Compose services and their intended hosting.}
-\label{tab:deploy}
 \begin{tabular}{lll}
 \toprule
-\textbf{Service} & \textbf{Image} & \textbf{Intended host} \\
+\textbf{Method} & \textbf{Route} & \textbf{Purpose} \\
 \midrule
-PostgreSQL 16    & \texttt{postgres:16-alpine}            & Railway managed database \\
-FastAPI backend  & \texttt{python:3.11-slim} + XGBoost    & Railway web service \\
-Next.js frontend & \texttt{node:22-alpine}, multi-stage   & Vercel \\
+POST  & \texttt{/api/predict}                   & Inference and session save \\
+POST  & \texttt{/api/gemini/followup-questions} & Stage~1 questions \\
+POST  & \texttt{/api/gemini/validate-enrich}    & Stage~2 validation and market data \\
+GET   & \texttt{/api/sessions}                  & List sessions (org filter) \\
+GET   & \texttt{/api/sessions/\{id\}}           & One session \\
+PATCH & \texttt{/api/sessions/\{id\}/notes}     & Counsellor notes \\
+GET   & \texttt{/api/sessions/analytics}        & Cohort statistics \\
+GET   & \texttt{/api/sessions/\{id\}/pdf}       & Parents' PDF report \\
+GET   & \texttt{/api/orgs/\{code\}}             & Resolve invite code \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-A \texttt{docker-compose.yml} runs all three services locally. The database
-password is read from an untracked \texttt{.env} file and the database port
-is not published outside the Docker network.
+\subsection{Assessment Wizard}
+The six-step wizard (welcome, background, 48 RIASEC items, TIPI, vocabulary,
+results) keeps its state client-side and persists it across page reloads.
+After the vocabulary step, the 88-feature vector is assembled server-side
+from the raw answers by the original feature-engineering code, which avoids
+any training-serving skew. An optional follow-up step sits between
+prediction and results.
+
+\subsection{Item Wording and Model Validity}
+Because 50.7\% of the total split gain comes from the 48 raw RIASEC items,
+their wording cannot be localised without invalidating the trained split
+thresholds. The interface therefore adds explanatory hints and a note that
+the Investigative items skew towards biology, which can understate
+Computer Science fit for technology-oriented students, while leaving the item
+text unchanged. Localised items would require re-collecting Pakistani
+training data (Section~\ref{sec:nextsteps}).
