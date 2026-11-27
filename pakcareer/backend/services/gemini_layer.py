@@ -59,7 +59,11 @@ def _get_client() -> genai.Client | None:
     return _client
 
 FLASH_MODELS = [
-    os.environ.get("GEMINI_MODEL", "gemini-3.6-flash"),
+    os.environ.get("GEMINI_MODEL", "gemini-3.5-flash"),
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite",
     "gemini-3.6-flash",
     "gemini-3.8-flash",
 ]
